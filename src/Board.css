@@ -1,0 +1,181 @@
+body {
+  background-color: #282c34;
+  color: white;
+}
+
+.board {
+  height: 600px;
+  width: 370px;
+  margin: 2%;
+
+  border: 2.5px solid;
+  border-radius: 5px;
+
+  position: relative;
+
+  display: flex;
+  justify-content: space-around;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media screen and (max-width:1000px) {
+  .board {
+    height: 600px;
+    width: 90%;
+    margin: 5%;
+    border: 2px solid;
+  }
+}
+
+/* DEF */
+.template, .top-panel, .central, .info-panel, 
+.card-row, .controller, .player, .card-area,
+.player-info, .avatar, .info-line, .deck-area,
+.play-area, .card-container {
+  border: 1.5px solid;
+  border-radius: 3px;
+  width: 96%;
+  height: 30%;
+}
+
+.top-panel {
+  border: none;
+  height: 6%;
+
+  text-align: center;
+}
+
+.central {
+  border: none;
+  height: 55%;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+.player {
+  border: none;
+  width: 48%;
+  height: 48%;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.deck-area, .play-area {
+  height: 96%;
+  width: 36%;
+  margin-left: 1%;
+  margin-right: 1%;
+}
+
+.deck-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-num {
+  font-size: 180%;
+}
+
+.card-areas {
+  border: none;
+  height: 50%;
+  width: 96%;
+
+  display: flex;
+  justify-content: start;
+}
+
+.player-info {
+  border: none;
+  height: 45%;
+  width: 96%;
+
+  display: flex;
+  flex-flow: column wrap;
+  justify-content: space-around;
+}
+
+.avatar {
+  height: 96%;
+  width: 36%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.avatar-img {
+  height: auto;
+  width: 100%;
+}
+
+.info-line {
+  border: none;
+  height: 45%;
+  width: 60%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 80%;
+}
+
+.info-panel {
+  border: none;
+  height: 6%;
+}
+
+.controller {
+  border: none;
+  height: 7.5%;
+
+  display: flex;
+}
+
+.card-row {
+  height: 18%;
+
+  display: flex;
+  align-items: center;
+  overflow-x: scroll;
+}
+
+.card-container {
+  flex-shrink: 0;
+
+  height: 95%;
+  width: 22.5%;
+  margin-left: .3%;
+  margin-right: .3%;
+}
+
+.controller-button {
+  background-color: rgba(0,0,0,0);
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-size: 115%;
+  padding: 1.0% 2.2% 1.0% 2.2%;
+  margin: 0% .8% 0% .8%;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.card-fruit {
+  position: absolute;
+  width: 25%;
+  height: 22%;
+  border: 1.5px solid white;
+  left: 2%;
+  top: 2%;
+}
