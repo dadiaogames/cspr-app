@@ -96,8 +96,22 @@ function InfoPanel(props: {log: string|EL}) {
 }
 
 function Controller(props: {operations: IOperation[], combined: Record<string, Dispatcher>}) {
+  useEffect(() => {
+    if (props.operations.length == 1) {
+      let operation = props.operations[0];
+      setTimeout(()=>{
+        props.combined[operation.action](...(operation.args || []));
+      }, 600);
+    }
+    else {
+      return;
+    }
+  });
+
+  let operations = (props.operations.length == 1)? [] : props.operations;
+
   return <div className="controller">
-    {props.operations.map(operation => 
+    {operations.map(operation => 
       <button className="controller-button" onClick={() => props.combined[operation.action](...(operation.args || []))}>{operation.name}</button>
     )}
   </div>;
@@ -140,10 +154,16 @@ function hand_processor(S: IState): (card: ICard, idx: number) => ICard {
   });
 }
 
-function get_player_info(player: IPlayer, G:IGame): string | EL[] {
+function get_player_info(player: IPlayer, G: IGame, S: IState): string | EL[] {
   if (G.phase == "place") {
     if (player.previous_action != undefined) {
-      return ["扣给自己", "扣给下家", "扣给对家", "扣给上家",][player.previous_action];
+      let target_idx = (G.players.indexOf(player) + player.previous_action) % 4;
+      if (target_idx == S.player_idx && player.previous_action != 0) {
+        return "扣给你";
+      }
+      else {
+        return ["扣给自己", "扣给下家", "扣给对家", "扣给上家",][player.previous_action];
+      }
     }
     else {
       return "准备扣牌";
@@ -178,7 +198,7 @@ function process_player(player: IPlayer, idx: number, G: IGame, S: IState): IPla
   return {
     ...player,
     name: ["玩家", "下家", "对家", "上家"][get_position(idx, S.player_idx)],
-    info: get_player_info(player, G),
+    info: get_player_info(player, G, S),
     selected: (G.phase == "action") && (idx == G.active_player_idx),
   };
 }

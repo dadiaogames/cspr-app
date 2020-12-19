@@ -28,7 +28,7 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(8, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(4, () => "白嫖"), ..._.times(4, () => "拆弹"),..._.times(3, () => "引爆"),..._.times(3, () => "加速"),..._.times(3, () => "归档"),..._.times(3, () => "鞋子"),];
+  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(4, () => "白嫖"), ..._.times(4, () => "拆弹"),..._.times(3, () => "引爆"),..._.times(3, () => "加速"),..._.times(3, () => "归档"),..._.times(3, () => "鞋子"),];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
@@ -100,6 +100,7 @@ const init_round: Move = (G, ctx) => {
     player.entities = ["skip"];
     player.out = false;
     player.finished = false;
+    player.previous_action = undefined;
   }
 
   init_goals(G, ctx);
@@ -313,9 +314,11 @@ const flip: Move = (G, ctx, player_idx: number, flip_action: FlipAction) => {
     if (flip_action == "skip") {
       let skipper = active_player.entities.find(x => x == "skip");
       if (skipper != undefined) {
+        let skipper_idx = active_player.entities.indexOf(skipper);
         flip_card(active_player);
-        active_player.entities = active_player.entities.filter(x => x != skipper);
+        active_player.entities.splice(skipper_idx, 1);
         skipped = true;
+        log_msg(G, ctx, `选择跳过`);
         // G.active_player_idx = (G.active_player_idx + 1) % NUM_PLAYERS;
         // G.next_action = "flip";
       }
@@ -360,6 +363,7 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
       console.log("Gonna add fruit");
       if (card.fruit != undefined) {
         player.entities.push({fruit: card.fruit});
+        log_msg(G, ctx, `将 ${card.name} 作为水果`);
       }
       else {
         return INVALID_MOVE;
@@ -368,6 +372,7 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
     else {
       console.log(`Just execute ${card.name}`);
       card.effect(G, ctx, player, card);
+      log_msg(G, ctx, `执行 ${card.name}`);
     }
 
     // Check finished
