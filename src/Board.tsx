@@ -52,7 +52,7 @@ function Avatar(props: {illust?: string, selected?: boolean, out?: boolean}) {
 }
 
 function InfoLine(props: {content: string|EL}) {
-  return <div className="info-line">
+  return <div className="info-line" style={{color: (props.content=="扣给你")?"#61dafb":undefined}}>
     {props.content}
   </div>;
 }
