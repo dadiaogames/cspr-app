@@ -195,5 +195,14 @@ export const CARDS: ICard[] = [
     }
   },
 
+  {
+    name: "机会",
+    desc: "将2张山牌放到牌库顶",
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/game-die_1f3b2.png",
+    effect(G, ctx, player) {
+      player.deck = [...G.deck.slice(0,2), ...player.deck];
+      G.deck = G.deck.slice(2);
+    }
+  },
 
 ];

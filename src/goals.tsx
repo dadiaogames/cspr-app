@@ -150,6 +150,16 @@ export const goals_raw: ICard[] = [
       }
     }
   },
+  {
+    name: "目标: 机会",
+    desc: "如果你的弃牌堆中有\"机会\"，则获得2分",
+    effect(G, ctx, player) {
+      let card = player.discard.find(x => x.name == "机会");
+      if (card != undefined) {
+        player.score += 2;
+      }
+    }
+  },
 ];
 
 export const GOALS = goals_raw.map(process_goal);
@@ -171,7 +181,7 @@ const check_requirements = (requirements: number[], score: number) => (G: IGame,
     console.log(`D:${diffs}, F:${fruits}, A:${agari}`);
     if (agari) {
       player.score += score;
-      self.is_achieved = false;
+      self.is_achieved = true;
       G.gamelogs.unshift("和牌!");
     }
   }
