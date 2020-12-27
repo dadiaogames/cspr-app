@@ -18,7 +18,7 @@ export interface IGame {
 
   host: number,
   ai_players: number[],
-  gamelogs: (string | EL)[],
+  gamelogs: string[],
 }
 
 export interface ICard {
@@ -32,6 +32,7 @@ export interface ICard {
   is_goal?: boolean,
   stackable?: boolean,
   is_public?: boolean,
+  is_achieved?: boolean,
 }
 
 export interface IPlayer {
@@ -96,7 +97,7 @@ export interface IState {
   hand_selected?: number,
 
   player_idx: number,
-  log: string | EL,
+  log: string,
 }
 
 export interface IOperation {

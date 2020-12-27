@@ -1,5 +1,6 @@
+import React from 'react';
 import { ICard } from './types';
-import { move, out, log_msg } from './Game';
+import { move, out, log_msg, add_fruits } from './Game';
 
 export const CARDS: ICard[] = [
   {
@@ -27,7 +28,105 @@ export const CARDS: ICard[] = [
       player.score += 1;
     },
   },
+{
+    name: "反向白嫖",
+    desc: "失去1分",
+    // has_fruit: true,
+    illust: "https://s3.ax1x.com/2020/12/27/r4zS8H.jpg",
+    effect(G, ctx, player) {
+      player.score -= 1;
+    },
+  },
+{
+    name: "裸奔",
+    desc: "弃掉持续区的所有牌",
+    // has_fruit: true,
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/man-running_1f3c3-200d-2642-fe0f.png",
+    effect(G, ctx, player) {
+      player.entities = [];
+    },
+  },
+  {
+    name: "送温暖",
+    desc: "上家和下家各获得1分",
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/pot-of-food_1f372.png",
+    effect(G, ctx, player) {
+      let idx = G.players.indexOf(player);
+      let upper_idx = (idx + 1) % 4;
+      let lower_idx = (idx + 3) % 4;
+      G.players[upper_idx].score += 1;
+      G.players[lower_idx].score += 1;
+    }
+  },
+  {
+    name: "西红柿",
+    desc: "将2个西红柿放入持续区",
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/tomato_1f345.png",
+    effect(G, ctx, player) {
+      // for (let i=0; i<2; i++){
+        // player.entities.push({fruit: 0});
+        add_fruits(G, ctx, player, [2,0,0]);
+      // }
+    }
+  },
+{
+    name: "柠檬",
+    desc: "将2个柠檬放入持续区",
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/lemon_1f34b.png",
+    effect(G, ctx, player) {
+      // for (let i=0; i<2; i++){
+        // player.entities.push({fruit: 1});
+        add_fruits(G, ctx, player, [0,2,0]);
+      // }
+    }
+  },
+{
+    name: "苹果",
+    desc: "将2个苹果放入持续区",
+    illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/green-apple_1f34f.png",
+    effect(G, ctx, player) {
+      // for (let i=0; i<2; i++){
+      //   player.entities.push({fruit: 2});
+      // }
+      add_fruits(G, ctx, player, [0,0,2]);
+    }
+  },
 
+
+
+  // {
+  //   name: "集体拆弹",
+  //   desc: "所有其他玩家弃掉牌库顶的1张牌，每有1个弃掉炸弹的玩家，就获得1分",
+  //   illust: "",
+  //   effect(G, ctx, player) {
+  //     let other_players = G.players.filter(x => x != player);
+  //     for (let p of other_players) {
+
+  //     }
+  //   }
+  // },
+  // {
+  //   name: "集体拆弹",
+  //   desc: "所有其他玩家弃掉牌库顶的1张牌，每有1个弃掉炸弹的玩家，就获得1分",
+  //   illust: "",
+  //   effect(G, ctx, player) {
+  //     let other_players = G.players.filter(x => x != player);
+  //     for (let p of other_players) {
+
+  //     }
+  //   }
+  // },
+  // {
+  //   name: "集体拆弹",
+  //   desc: "所有其他玩家弃掉牌库顶的1张牌，每有1个弃掉炸弹的玩家，就获得1分",
+  //   illust: "",
+  //   effect(G, ctx, player) {
+  //     let other_players = G.players.filter(x => x != player);
+  //     for (let p of other_players) {
+
+  //     }
+  //   }
+  // },
   {
     name: "鞋子",
     desc: "获得1次跳过机会",
@@ -53,7 +152,7 @@ export const CARDS: ICard[] = [
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/racing-car_1f3ce-fe0f.png",
     effect(G, ctx, player) {
       let card = move(player.deck, player.discard);
-      if (card != undefined) {
+      if (card != undefined && card.effect != undefined) {
         log_msg(G, ctx, <span>执行了 {card.name} 两次</span>);
         card.effect(G, ctx, player);
         card.effect(G, ctx, player);

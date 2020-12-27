@@ -3,7 +3,7 @@ import { IState, Action, Phase, IOperation, IGame, ICard, FlipAction } from './t
 
 export function init_state(): IState {
   return {
-    board: "GameBoard",
+    board: "GoalBoard",
     player_idx: 0,
     log: "",
   };
@@ -64,7 +64,7 @@ export function get_operations(G: IGame, S: IState): IOperation[] {
           flip_actions.push({name: "跳过", action: "flip", args: [S.player_idx, "skip"]});
         }
         if ((player.hand.length > 0) && (S.hand_selected != undefined)) {
-          flip_actions.push({name: "打出存档", action: "flip", args: [S.player_idx, {archive_idx: S.hand_selected}]});
+          flip_actions.unshift({name: "打出存档", action: "flip", args: [S.player_idx, {archive_idx: S.hand_selected}]});
         }
         return flip_actions;
       }
@@ -80,7 +80,7 @@ export function get_operations(G: IGame, S: IState): IOperation[] {
       }
     }
     else {
-      if (S.player_idx == G.host) {
+      if (S.player_idx == G.host && G.ai_players.includes(G.active_player_idx)) {
         return [
           {
             name: "行动",

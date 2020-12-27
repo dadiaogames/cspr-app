@@ -5044,6 +5044,11 @@
     "text-table" "^0.2.0"
     "v8-compile-cache" "^2.0.3"
 
+"esm@^3.2.25":
+  "integrity" "sha1-NCwYwp1WFXaIulzjH4Qx+7eVzBA="
+  "resolved" "https://registry.npm.taobao.org/esm/download/esm-3.2.25.tgz"
+  "version" "3.2.25"
+
 "espree@^7.3.0":
   "integrity" "sha512-dksIWsvKCixn1yrEXO8UosNSxaDoSYpq9reEjZSbHLpT5hpaCAKTLBwq0RHtLrIr+c0ByiYzWT8KTMRzoRCNlw=="
   "resolved" "https://registry.yarnpkg.com/espree/-/espree-7.3.0.tgz"

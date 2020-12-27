@@ -12,3 +12,5 @@ export const AVATARS = [
 ];
 
 export const goal_illust = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/beer-mug_1f37a.png";
+
+export const public_goal_illust = "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/green-salad_1f957.png";

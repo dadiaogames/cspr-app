@@ -1,4 +1,5 @@
 import React, { ReactNode as EL } from 'react';
+import { ActivePlayers } from 'boardgame.io/core';
 import _ from 'lodash';
 import { Ctx, Move as GeneralMove } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/core';
@@ -6,7 +7,7 @@ import { CARDS } from './cards';
 
 import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction } from './types';
 import { AVATARS } from './assets';
-import { GOALS } from './goals';
+import { GOALS, PUBLIC_GOALS } from './goals';
 
 // No "turn based" stuffs are used
 
@@ -28,7 +29,7 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(4, () => "白嫖"), ..._.times(4, () => "拆弹"),..._.times(3, () => "引爆"),..._.times(3, () => "加速"),..._.times(3, () => "归档"),..._.times(3, () => "鞋子"),];
+  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(3, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(1, () => "加速"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(2, () => "西红柿"),..._.times(2, () => "柠檬"),..._.times(2, () => "苹果"),];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
@@ -83,6 +84,8 @@ const init_goals: Move = (G, ctx) => {
     let player = G.players[i];
     player.goals = goals.slice(2*i, 2*i+2);
   }
+
+  G.public_goals = ctx.random!.Shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,1);
 }
 
 const init_round: Move = (G, ctx) => {
@@ -123,7 +126,7 @@ function setup(ctx: Ctx): IGame {
     phase: "place",
 
     host: 0,
-    ai_players: [1, 2, 3],
+    ai_players: [0,1,2,3].slice(ctx.numPlayers),
     gamelogs: [],
   };
 
@@ -131,7 +134,20 @@ function setup(ctx: Ctx): IGame {
 
   init_round(G, ctx);
 
+  console.log(`How many AI: ${ctx.numPlayers} ${G.ai_players}`);
+
   return G;
+}
+
+export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) {
+  for (let i=0; i<3; i++) {
+    for (let j=0; j<fruits[i]; j++) {
+      player.entities.push({fruit: i});
+    }
+  }
+  for (let goal of G.public_goals) {
+    goal.effect(G, ctx, player, goal);
+  }
 }
 
 function all_finished(G: IGame): boolean {
@@ -231,6 +247,7 @@ const add_action: Move = (G, ctx, action: IAction) => {
   if (from_idx == G.host) {
     ai_moves(G, ctx);
   }
+  console.log(`Actions length: ${G.actions.length}`);
 
   // Check whether it's full
   if (G.actions.length == G.players.length) {
@@ -343,7 +360,7 @@ const flip: Move = (G, ctx, player_idx: number, flip_action: FlipAction) => {
     else {
       flip_card(active_player);
       console.log("翻开牌", active_player.discard[0].name);
-      log_msg(G, ctx, [<span>翻开 {active_player.discard[0].name}</span>]);
+      log_msg(G, ctx, `翻开 ${active_player.discard[0].name}`);
     }
 
     proceed(G, ctx, skipped);
@@ -362,7 +379,10 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
     if (execute_action == "fruit") {
       console.log("Gonna add fruit");
       if (card.fruit != undefined) {
-        player.entities.push({fruit: card.fruit});
+        // player.entities.push({fruit: card.fruit});
+        let added = [0,0,0];
+        added[card.fruit] = 1;
+        add_fruits(G, ctx, player, added);
         log_msg(G, ctx, `将 ${card.name} 作为水果`);
       }
       else {
@@ -371,7 +391,8 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
     }
     else {
       console.log(`Just execute ${card.name}`);
-      card.effect(G, ctx, player, card);
+      console.log({...card});
+      card.effect && card.effect(G, ctx, player, card);
       log_msg(G, ctx, `执行 ${card.name}`);
     }
 
@@ -405,7 +426,7 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
   }
 };
 
-export const log_msg: Move = (G, ctx, msg: string|EL) => {
+export const log_msg: Move = (G, ctx, msg: string) => {
   G.gamelogs.unshift(msg);
 }
 
@@ -417,5 +438,10 @@ export const CSPR = {
     execute,
     ai_act,
     log_msg,
+  },
+  minPlayers: 1,
+  maxPlayers: 4,
+  turn: {
+    activePlayers: ActivePlayers.ALL,
   },
 };

@@ -45,8 +45,8 @@ function CardAreas(props: {cardNum: number, playedCard?: ICard}) {
   </div>;
 }
 
-function Avatar(props: {illust?: string, selected?: boolean}) {
-  return <div className="avatar" style={{border:(props.selected)?"3px solid #61dafb":undefined}}>
+function Avatar(props: {illust?: string, selected?: boolean, out?: boolean}) {
+  return <div className="avatar" style={{border:(props.selected)?"3px solid #61dafb":(props.out)?"1px solid #f5222d":undefined}}>
     <img src={props.illust} className="avatar-img" />
   </div>;
 }
@@ -66,7 +66,7 @@ export interface IPlayerInfo extends IPlayer {
 
 function PlayerInfo(props: IPlayerInfo) {
   return <div className="player-info">
-    <Avatar illust={props.illust} selected={props.selected} />
+    <Avatar illust={props.illust} selected={props.selected} out={props.out} />
     <InfoLine content={`${props.name}(${props.score}分)`} />
     <InfoLine content={props.info}/>
   </div>;
@@ -88,17 +88,22 @@ function Central(props: {players: IPlayerInfo[]}) {
   </div>;
 }
 
-function InfoPanel(props: {log: string|EL}) {
+function InfoPanel(props: {log: string}) {
   // Top panel is only used to display count, all other logs are displayed in info panel
+  useEffect(()=>console.log(props.log), [props.log]);
   return <div className="info-panel">
     {props.log}
   </div>;
 }
 
-function Controller(props: {operations: IOperation[], combined: Record<string, Dispatcher>}) {
+function Controller(props: {operations: IOperation[], combined: Record<string, Dispatcher>, autoMove?: boolean, G:IGame}) {
+  // Use this method at first, and props.autoMove is only used when needed
+  let move1 = props.operations[0];
+  let autoMove = move1 && (move1.name == "行动");
   useEffect(() => {
-    if (props.operations.length == 1) {
+    if (autoMove == true) {
       let operation = props.operations[0];
+      console.log(`Ready to auto_move ${props.G.active_player_idx} ${props.G.next_action}`);
       setTimeout(()=>{
         props.combined[operation.action](...(operation.args || []));
       }, 600);
@@ -106,9 +111,9 @@ function Controller(props: {operations: IOperation[], combined: Record<string, D
     else {
       return;
     }
-  });
+  }, [props.G.active_player_idx, props.G.next_action]);
 
-  let operations = (props.operations.length == 1)? [] : props.operations;
+  let operations = (autoMove)? [] : props.operations;
 
   return <div className="controller">
     {operations.map(operation => 
@@ -187,7 +192,7 @@ function get_player_info(player: IPlayer, G: IGame, S: IState): string | EL[] {
 function get_position(idx: number, player_idx: number) {
   let diff = idx - player_idx;
   if (diff < 0) {
-    return 4 - diff;
+    return 4 + diff;
   }
   else {
     return diff;
@@ -208,7 +213,6 @@ function GameBoard(props: BoardProps){
     <Central 
       players = {reorder(props.G.players.map((player, idx) => process_player(player, idx, props.G, props.S)), [(props.S.player_idx+2)%4,(props.S.player_idx+3)%4,(props.S.player_idx+1)%4,props.S.player_idx])}
     />
-    {/* <InfoPanel log={msg} /> */}
     <InfoPanel log={(props.G.phase == "place")? props.S.log : props.G.gamelogs[0]} />
     {/* <InfoPanel log="这是一条log" /> */}
     {/* <InfoPanel log={props.S.log} /> */}
@@ -216,16 +220,17 @@ function GameBoard(props: BoardProps){
     <Controller 
       operations = {get_operations(props.G, props.S)}
       combined = {props.combined}
+      G = {props.G}
     />
     <CardRow 
-      cards = {props.G.players[0].hand.map(hand_processor(props.S))}  
+      cards = {props.G.players[props.S.player_idx].hand.map(hand_processor(props.S))}  
       handleCardClick = {idx => () => props.actions.select_hand(idx, props.G.players[props.S.player_idx].hand)}
     />
     <TopPanel gameCount={`${"東南西"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} />
   </div>;
 }
 
-function Goal(props: {goal: ICard}) {
+function Goal(props: {goal: Partial<ICard>}) {
   let goal_illust = (props.goal.is_public == true)? "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/green-salad_1f957.png":goal_illust_src;
   return <div className="goal">
     <div className="goal-illust-container">
@@ -241,10 +246,16 @@ function Goal(props: {goal: ICard}) {
   </div>;
 }
 
+function process_public_goal(desc: string|EL): EL {
+  let fruits_lookup: Record<string, EL> = {A:FRUITS[0], B:FRUITS[1], C:FRUITS[2]};
+  return (desc as string).split("").map(char => fruits_lookup[char]);
+}
+
 function GoalBoard(props: BoardProps) {
   return <div className="board">
     <div className="goals-container">
-      {props.G.players[props.S.player_idx].goals.map(goal => <Goal goal={goal}/>)}
+      {props.G.public_goals.filter(goal => !goal.is_achieved).map(goal => <Goal goal={{name: goal.name, desc:process_public_goal(goal.desc), is_public:goal.is_public}} />)}
+      {props.G.players[props.S.player_idx].goals.map(goal => <Goal goal={{name: goal.name, desc:goal.desc, is_public:goal.is_public}}/>)}
     </div>
     <button className="gb-back-button" onClick={() => props.actions.change_board("GameBoard")} >返回</button>
   </div>;
@@ -290,6 +301,12 @@ export function Board(props: BGBoardProps<IGame>) {
       actions.change_board("GoalBoard");
     }
   }, [G.phase]);
+
+  useEffect(() => {
+    setS({...S, player_idx: parseInt(props.playerID || "0")});
+    console.log({...props});
+    console.log(`The player ID is: ${props.playerID}`);
+  }, []);
 
   let board: (props:BoardProps) => JSX.Element = BOARDS[S.board] || GameBoard;
   // let board = GoalBoard;
