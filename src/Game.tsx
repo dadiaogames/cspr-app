@@ -29,7 +29,7 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(3, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(1, () => "加速"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(2, () => "西红柿"),..._.times(2, () => "柠檬"),..._.times(2, () => "苹果"),..._.times(2, ()=>"机会"),];
+  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(3, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(3, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(1, () => "加速"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(2, ()=>"机会"),];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
