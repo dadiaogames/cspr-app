@@ -6,6 +6,7 @@ import './Board.css';
 import './Lobby.css';
 import { AVATARS } from './avatars';
 import { rand } from './utils';
+import { SocketIO } from 'boardgame.io/dist/types/packages/multiplayer';
 
 const NUM_PLAYERS = 4;
 
@@ -159,7 +160,7 @@ export function Lobby(props:{actions:any}) {
     </div>
     <div className="rooms">
       {/* <Room players={["1","2","3"]} operation={{name:"加入"}} /> */}
-      {L.rooms.map(room => <Room players={room.players.map((p:any) => p.player_id)} playerID={L.player_id} operation={get_room_operation(room, L.player_id, player_contained, setL)} locked={L.locked} />)}
+      {L.rooms.filter(room => room.players.length < NUM_PLAYERS).map(room => <Room players={room.players.map((p:any) => p.player_id)} playerID={L.player_id} operation={get_room_operation(room, L.player_id, player_contained, setL)} locked={L.locked} />)}
     </div>
     <div></div>
     <div style={{display: player_contained?"none":undefined}} className="lobby-controller">      

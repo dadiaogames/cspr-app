@@ -1,5 +1,6 @@
 import { ReactNode as EL } from 'react';
 import { Ctx } from 'boardgame.io';
+import { PRNG } from './utils';
 
 export type Phase = "place" | "action";
 
@@ -7,6 +8,7 @@ export interface IGame {
   deck: ICard[],
   players: IPlayer[],
   public_goals: ICard[],
+  rng: PRNG,
 
   actions: IAction[],
 
@@ -19,6 +21,9 @@ export interface IGame {
   host: number,
   ai_players: number[],
   gamelogs: string[],
+
+  f1: () => string,
+  f2: () => string,
 }
 
 export interface ICard {

@@ -90,7 +90,7 @@ function Central(props: {players: IPlayerInfo[]}) {
 
 function InfoPanel(props: {log: string}) {
   // Top panel is only used to display count, all other logs are displayed in info panel
-  useEffect(()=>console.log(props.log), [props.log]);
+  // useEffect(()=>console.log(props.log), [props.log]);
   return <div className="info-panel">
     {props.log}
   </div>;
@@ -306,6 +306,11 @@ export function Board(props: BGBoardProps<IGame>) {
     setS({...S, player_idx: parseInt(props.playerID || "0")});
     console.log({...props});
     console.log(`The player ID is: ${props.playerID}`);
+    let is_host = props.playerID == props.G.host + "";
+    if (is_host || (props.playerID == undefined)) {
+      console.log("This guy is host");
+      props.moves.setup_scenario(Date());
+    }
   }, []);
 
   let board: (props:BoardProps) => JSX.Element = BOARDS[S.board] || GameBoard;

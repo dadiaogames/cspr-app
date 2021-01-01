@@ -8,6 +8,7 @@ import { CARDS } from './cards';
 import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction } from './types';
 import { AVATARS } from './assets';
 import { GOALS, PUBLIC_GOALS } from './goals';
+import { PRNG } from './utils';
 
 // No "turn based" stuffs are used
 
@@ -27,16 +28,16 @@ export function move(deck1: ICard[], deck2: ICard[]) {
   }
 }
 
-function init_deck(ctx: Ctx): ICard[] {
+function init_deck(G:IGame, ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
   let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(3, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(1, () => "加速"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(2, ()=>"机会"),];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
-      card.fruit = ctx.random!.Die(3) - 1;
+      card.fruit = G.rng.randRange(3);
     }
   }
-  return ctx.random?.Shuffle(deck) || deck;
+  return G.rng.shuffle(deck);
 }
 
 function setup_player(): IPlayer {
@@ -70,14 +71,16 @@ const init_draft: Move = (G, ctx) => {
 
 const add_avatars: Move = (G, ctx) => {
   let len = G.players.length;
-  let avatars = ctx.random!.Shuffle(AVATARS).slice(0, len);
+  console.log(G.rng);
+  console.log(G.rng.shuffle);
+  let avatars = G.rng.shuffle(AVATARS).slice(0, len);
   for (let i=0; i<len; i++) {
     G.players[i].illust = avatars[i];
   }
 }
 
 const init_goals: Move = (G, ctx) => {
-  let goals = ctx.random!.Shuffle([...GOALS, ...GOALS.filter(x => x.stackable)]);
+  let goals = G.rng.shuffle([...GOALS, ...GOALS.filter(x => x.stackable)]);
 
   // Debug is 1, then change to 2
   for (let i=0; i<G.players.length; i++) {
@@ -85,14 +88,14 @@ const init_goals: Move = (G, ctx) => {
     player.goals = goals.slice(2*i, 2*i+2);
   }
 
-  G.public_goals = ctx.random!.Shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,1);
+  G.public_goals = G.rng.shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,1);
 }
 
 const init_round: Move = (G, ctx) => {
   // Reset the deck, pass the init player
   G.phase = "place";
   G.round += 1;
-  G.deck = init_deck(ctx);
+  G.deck = init_deck(G, ctx);
   G.init_player = (G.init_player + 1) % 4;
 
   // Reset player data
@@ -116,10 +119,11 @@ function setup(ctx: Ctx): IGame {
     deck: [],
     players: _.times(NUM_PLAYERS, setup_player),
     public_goals: [],
+    rng: new PRNG(114514),
 
     actions: [],
     round: -1,
-    init_player: (ctx.random?.Die(NUM_PLAYERS) || 1) - 1,
+    init_player: 0,
     active_player_idx: 0,
     next_action: "place",
 
@@ -128,15 +132,21 @@ function setup(ctx: Ctx): IGame {
     host: 0,
     ai_players: [0,1,2,3].slice(ctx.numPlayers),
     gamelogs: [],
+
+    f1: () => "f1",
+    f2: () => "f2",
   };
-
-  add_avatars(G, ctx);
-
-  init_round(G, ctx);
 
   console.log(`How many Players AI: ${ctx.numPlayers} ${G.ai_players}`);
 
   return G;
+}
+
+export const setup_scenario: Move = (G, ctx, seed) => {
+  G.rng = new PRNG(seed);
+  add_avatars(G, ctx);
+  init_round(G, ctx);
+  G.f2 = () => "f12";
 }
 
 export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) {
@@ -146,6 +156,7 @@ export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) 
     }
   }
   for (let goal of G.public_goals) {
+    goal = PUBLIC_GOALS.find(x => x.desc == goal.desc) as ICard;
     goal.effect(G, ctx, player, goal);
   }
 }
@@ -184,8 +195,8 @@ const place: Move = (G, ctx, from_idx: number, card_idx: number, direction: numb
 const ai_moves: Move = (G, ctx) => {
   for (let idx of G.ai_players) {
     // AI IMPLEMENT: card_idx and direction
-    let card_idx = ctx.random!.Die(G.players[idx].hand.length) - 1;
-    let direction = ctx.random!.Die(G.players.length) - 1;
+    let card_idx = G.rng.randRange(G.players[idx].hand.length);
+    let direction = G.rng.randRange(G.players.length);
     G.actions.push({
       from_idx: idx,
       card_idx, 
@@ -199,7 +210,7 @@ const enter_action_phase: Move = (G, ctx) => {
 
   for (let player of G.players) {
     // console.log("Deck before:", player.deck.map(card=>({...card})));
-    player.deck = ctx.random!.Shuffle(player.deck);
+    player.deck = G.rng.shuffle(player.deck);
     player.deck = [...player.deck, ...player.goals];
     // console.log(player.deck);
   }
@@ -213,6 +224,10 @@ const change_hands_or_enter_action_phase: Move = (G, ctx) => {
   let hands = G.players.map(player => player.hand);
   let len = hands.length;
   let num_remained_cards = hands[0].length;
+  console.log(G.rng);
+  console.log("Shuffle:", G.rng.shuffle);
+  console.log("F1:", G.f1);
+  console.log("F2:", G.f2);
 
   if (num_remained_cards == 0) {
     console.log("Time to enter the action phase");
@@ -220,6 +235,7 @@ const change_hands_or_enter_action_phase: Move = (G, ctx) => {
   }
 
   else {
+    console.log("Pass hands");
     hands = [hands[len-1], ...hands.slice(0, len-1)];
     for (let i=0; i<len; i++) {
       G.players[i].hand = hands[i];
@@ -296,7 +312,7 @@ export function out(player: IPlayer) {
 //     player.previous_action = undefined;
 //   }
 
-//   G.deck = ctx.random!.Shuffle(G.deck);
+//   G.deck = G.rng.shuffle(G.deck);
 
 //   init_draft(G, ctx);
 // };
@@ -393,6 +409,8 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
     }
     else {
       console.log(`Just execute ${card.name}`);
+      // Add functions
+      card = (card.is_goal?GOALS:CARDS).find(x => x.name == card.name) as ICard;
       console.log({...card});
       card.effect && card.effect(G, ctx, player, card);
       log_msg(G, ctx, `执行 ${card.name}`);
@@ -440,10 +458,20 @@ export const CSPR = {
     execute,
     ai_act,
     log_msg,
+    setup_scenario,
   },
   minPlayers: 1,
   maxPlayers: 4,
   turn: {
     activePlayers: ActivePlayers.ALL,
   },
+  plugins: [
+    {
+      name: "rng",
+      fnWrap: (fn:any) => (G:IGame, ctx:Ctx, ...args:any[]) => {
+        G = fn({...G, rng: new PRNG(114514, G.rng.val)}, ctx, ...args);
+        return G;
+      }
+    },
+  ],
 };
