@@ -68,12 +68,12 @@ function onOperate(setter: Setter) {
 
 function create_room(player_id: string) {
   let api = `http://${API}/create`;
-  return send_post_req(api, {player_id});
+  return send_post_req(api, {player_id, max_players: NUM_PLAYERS});
 }
 
 function enter_room(player_id: string, room_id: string) {
   let api = `http://${API}/enter`;
-  return send_post_req(api, {player_id, room_id, max_players: NUM_PLAYERS});
+  return send_post_req(api, {player_id, room_id});
 }
 
 function leave_room(player_id: string, room_id: string) {
@@ -117,6 +117,7 @@ export function Lobby(props:{actions:any}) {
   });
 
   useEffect(()=>{
+    // setL({...L, player_id: uuidv4()});
     fetch_rooms(setL);
     const interval = setInterval(()=>{
       fetch_rooms(setL);
@@ -138,7 +139,7 @@ export function Lobby(props:{actions:any}) {
     let player_room = L.rooms.find(room => room.players.find((p:any) => p.player_id == L.player_id) != undefined);
     if (player_room && player_room.players.length == NUM_PLAYERS) {
       let player_idx = player_room.players.map((p:any) => p.player_id).indexOf(L.player_id) + "";
-      enter_game(L.player_id, player_room.room_id);
+      // enter_game(L.player_id, player_room.room_id);
       props.actions.enter_game(player_room.room_id, player_idx);
     }
   }, [L.rooms]);

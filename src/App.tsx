@@ -9,8 +9,8 @@ import { TitleScreen } from './Title';
 import { Lobby } from './Lobby';
 import { Dispatcher } from './types';
 
-const SERVER = "47.96.2.148:8000"
-// const SERVER = "localhost:8000"
+const SERVER = SocketIO({server:"47.96.2.148:8000"});
+// const SERVER = Local();
 
 interface IAppState {
   scene: string,
@@ -70,7 +70,10 @@ const App = () => {
 
   const actions: Record<string, Dispatcher> = {
     changer: (scene: string) => setS({...S, scene}),
-    enter_game: (matchID: string, playerID: string) => setS({...S, game_instance: {matchID, playerID}}),
+    enter_game: (matchID: string, playerID: string) => {
+      setS({...S, game_instance: {matchID, playerID}});
+      alert(`对局代码为: ${matchID}${playerID}`);
+    },
     finish_game: () => setS({...S, game_instance:undefined}),
     direct_enter: () => {
       let game_data = prompt("输入对局代码:");
@@ -83,11 +86,12 @@ const App = () => {
   let Scene = scenes[S.scene] || Title;
   if (S.game_instance != undefined) {
     let GameInstance = Client({
-      game: CSPR,
+      game: {...CSPR, seed:S.game_instance.matchID},
       board: Board,
       debug: false,
-      multiplayer: SocketIO({server: SERVER}),
+      multiplayer: SERVER,
       numPlayers: 4,
+      // seed: S.game_instance.matchID,
     });
     Scene = () => <GameInstance matchID={S.game_instance.matchID} playerID={S.game_instance.playerID} />;
   }
