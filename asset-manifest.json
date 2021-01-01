@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/cspr-app/static/css/main.fe8b5469.chunk.css",
-    "main.js": "/cspr-app/static/js/main.818fe4da.chunk.js",
-    "main.js.map": "/cspr-app/static/js/main.818fe4da.chunk.js.map",
+    "main.js": "/cspr-app/static/js/main.d4efb4b2.chunk.js",
+    "main.js.map": "/cspr-app/static/js/main.d4efb4b2.chunk.js.map",
     "runtime-main.js": "/cspr-app/static/js/runtime-main.44a22d0d.js",
     "runtime-main.js.map": "/cspr-app/static/js/runtime-main.44a22d0d.js.map",
     "static/js/2.a582442e.chunk.js": "/cspr-app/static/js/2.a582442e.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.44a22d0d.js",
     "static/js/2.a582442e.chunk.js",
     "static/css/main.fe8b5469.chunk.css",
-    "static/js/main.818fe4da.chunk.js"
+    "static/js/main.d4efb4b2.chunk.js"
   ]
 }
