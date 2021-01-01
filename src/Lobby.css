@@ -1,0 +1,57 @@
+.lobby-player-panel, .rooms, .room, .lobby-avatar-container {
+  border: 1.5px solid;
+  border-radius: 3px;
+  width: 96%;
+  height: 30%;
+}
+
+.lobby-player-panel {
+  height: 15%;
+  display: flex;
+  align-items: center;
+}
+
+.rooms {
+  height: 60%;
+
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  overflow-y: scroll;
+  
+}
+
+.room {
+  height: 25%;
+  margin: 1% 0% 1% 0%;
+
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.lobby-avatar-container {
+  height: 72%;
+  width: 18%;
+  margin-left: 2%;
+}
+
+.lobby-avatar {
+  width: 100%;
+  height: auto;
+}
+
+.room-btn {
+  margin-left: auto;
+  margin-right: 1%;
+}
+
+.lobby-btn {
+  
+}
+
+.lobby-controller {
+  height: 10%;
+  width: 98%;
+  text-align: center;
+}

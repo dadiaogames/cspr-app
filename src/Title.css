@@ -1,0 +1,30 @@
+.title-screen-button, .mode-selection-button {
+  font-size: 105%;
+  margin-top: 10%;
+  /* width: 30.9%;
+  height: 12.3%;
+  margin-top: 4.5%; */
+  padding: 5%;
+}
+
+.title-block {
+  text-align: center;
+  height: 80%;
+  /* margin-top: 15%; */
+  /* let board be flex */
+}
+
+.title-img-container {
+  height: 30%;
+  width: 98%;
+  /* border: 1px solid; */
+}
+
+.title-img {
+  height: 100%;
+  width: auto;
+}
+
+.title-a {
+  color: #61dafb;
+}
