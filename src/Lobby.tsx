@@ -9,7 +9,8 @@ import { rand } from './utils';
 
 const NUM_PLAYERS = 4;
 
-const API = "localhost:3050";
+// const API = "localhost:3050";
+const API = "47.96.2.148:3050";
 
 // EH: Client and server should be communicated in a good way, not in this way
 interface ILobby {

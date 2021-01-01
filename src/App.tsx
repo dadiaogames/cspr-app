@@ -9,6 +9,9 @@ import { TitleScreen } from './Title';
 import { Lobby } from './Lobby';
 import { Dispatcher } from './types';
 
+const SERVER = "47.96.2.148:8000"
+// const SERVER = "localhost:8000"
+
 interface IAppState {
   scene: string,
   game_instance: {matchID: string, playerID: string} | undefined,
@@ -83,7 +86,7 @@ const App = () => {
       game: CSPR,
       board: Board,
       debug: false,
-      multiplayer: SocketIO({server: 'localhost:8000'}),
+      multiplayer: SocketIO({server: SERVER}),
       numPlayers: 4,
     });
     Scene = () => <GameInstance matchID={S.game_instance.matchID} playerID={S.game_instance.playerID} />;
