@@ -6,14 +6,14 @@ import { ICard, IGame, IPlayer } from './types';
 
 function score_based_on_fruit(player: IPlayer, fruit_idx: number) {
   let num_fruit = player.entities.filter(x => ((typeof x == "object") && (x.fruit == fruit_idx))).length;
-  if (num_fruit >= 3) {
-    player.score += 6;
+  if (num_fruit >= 4) {
+    player.score += 7;
+  }
+  else if (num_fruit == 3) {
+    player.score += 4;
   }
   else if (num_fruit == 2) {
-    player.score += 3;
-  }
-  else if (num_fruit == 1) {
-    player.score += 1;
+    player.score += 2;
   }
   else {
     return;
@@ -102,24 +102,24 @@ export const goals_raw: ICard[] = [
 
   {
     name: "目标: 西红柿",
-    // desc: <span>如果你拥有1/2/3个{FRUITS[0]}，则获得1/3/6分</span>,
-    desc: "如果你拥有1/2/3个西红柿，则获得1/3/6分",
+    // desc: <span>如果你拥有2/3/4个{FRUITS[0]}，则获得2/4/7分</span>,
+    desc: "如果你拥有2/3/4个西红柿，则获得2/4/7分",
     effect(G, ctx, player) {
       score_based_on_fruit(player, 0);
     }
   },
 {
     name: "目标: 柠檬",
-    // desc: <span>如果你拥有1/2/3个{FRUITS[1]}，则获得1/3/6分</span>,
-    desc: "如果你拥有1/2/3个柠檬，则获得1/3/6分",
+    // desc: <span>如果你拥有2/3/4个{FRUITS[1]}，则获得2/4/7分</span>,
+    desc: "如果你拥有2/3/4个柠檬，则获得2/4/7分",
     effect(G, ctx, player) {
       score_based_on_fruit(player, 1);
     }
   },
 {
     name: "目标: 青苹果",
-    // desc: <span>如果你拥有1/2/3个{FRUITS[2]}，则获得1/3/6分</span>,
-    desc: "如果你拥有1/2/3个苹果，则获得1/3/6分",
+    // desc: <span>如果你拥有2/3/4个{FRUITS[2]}，则获得2/4/7分</span>,
+    desc: "如果你拥有2/3/4个苹果，则获得2/4/7分",
     effect(G, ctx, player) {
       score_based_on_fruit(player, 2);
     }

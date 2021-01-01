@@ -134,7 +134,7 @@ function setup(ctx: Ctx): IGame {
 
   init_round(G, ctx);
 
-  console.log(`How many AI: ${ctx.numPlayers} ${G.ai_players}`);
+  console.log(`How many Players AI: ${ctx.numPlayers} ${G.ai_players}`);
 
   return G;
 }
@@ -198,8 +198,10 @@ const enter_action_phase: Move = (G, ctx) => {
   G.phase = "action";
 
   for (let player of G.players) {
-    player.deck = ctx.random?.Shuffle(player.deck) || player.deck;
+    // console.log("Deck before:", player.deck.map(card=>({...card})));
+    player.deck = ctx.random!.Shuffle(player.deck);
     player.deck = [...player.deck, ...player.goals];
+    // console.log(player.deck);
   }
 
   G.next_action = "flip";

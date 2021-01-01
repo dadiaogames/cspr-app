@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 export function map_object<a,b>(fn: (arg: a, key?: string) => b, obj: Record<string,a>) {
   let new_obj: Record<string,b> = {};
 
@@ -19,4 +21,10 @@ export function contain_key<a,b>(value: a, key: b) {
   else {
     return false;
   }
+}
+
+export function rand(seed: string) {
+  let val = _.sum(seed.split("").map((c, idx) => seed.charCodeAt(idx)));
+  let x = Math.sin(val++) * 10000;
+  return x - Math.floor(x);
 }
