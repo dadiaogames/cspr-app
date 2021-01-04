@@ -609,7 +609,7 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
       // Play archive
       if (ai.hand.length > 0) {
         let archive = ai.hand[0];
-        if (archive.effect_type != "aggressive" && archive.effect_type != "topdown") {
+        if (archive.effect_type != "aggressive" && archive.effect_type != "topdown" && ai.goals[0].target_card != "归档") {
           flip_action = {archive_idx: 0};
         }
       }
