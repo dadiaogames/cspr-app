@@ -252,6 +252,8 @@ function process_public_goal(desc: string|EL): EL {
 }
 
 function GoalBoard(props: BoardProps) {
+  // console.log("All publics:", props.G.public_goals);
+  // console.log("Unachieved:", props.G.public_goals.filter(goal => !goal.is_achieved));
   return <div className="board">
     <div className="goals-container">
       {props.G.public_goals.filter(goal => !goal.is_achieved).map(goal => <Goal goal={{name: goal.name, desc:process_public_goal(goal.desc), is_public:goal.is_public}} />)}

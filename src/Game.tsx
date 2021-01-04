@@ -183,8 +183,7 @@ export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) 
     }
   }
   for (let goal of G.public_goals) {
-    goal = PUBLIC_GOALS.find(x => x.desc == goal.desc) as ICard;
-    goal.effect(G, ctx, player, goal);
+    (PUBLIC_GOALS.find(x => x.desc == goal.desc) as ICard).effect(G, ctx, player, goal);
   }
 }
 
@@ -260,7 +259,7 @@ const ai_moves: Move = (G, ctx) => {
           let card = ai.hand[i];
           let weight = card_weights[i];
           if (card.effect_type == "aggressive") {
-            weight.weight += ai.ai_behaviour.aggressive + 1;
+            weight.weight += ai.ai_behaviour.aggressive + 10;
             weight.direction.push(goal.aggressive_goal);
           }
         }
@@ -503,20 +502,17 @@ const flip: Move = (G, ctx, player_idx: number, flip_action: FlipAction) => {
   if (G.next_action == "flip" && G.active_player_idx == player_idx) {
     let active_player = G.players[G.active_player_idx];
     let skipped = false;
+    let skipper = active_player.entities.find(x => x == "skip");
 
-    if (flip_action == "skip") {
-      let skipper = active_player.entities.find(x => x == "skip");
-      if (skipper != undefined) {
-        let skipper_idx = active_player.entities.indexOf(skipper);
-        flip_card(active_player);
-        active_player.entities.splice(skipper_idx, 1);
-        skipped = true;
-        log_msg(G, ctx, `选择跳过`);
-        // G.active_player_idx = (G.active_player_idx + 1) % NUM_PLAYERS;
-        // G.next_action = "flip";
-      }
-      else {
-        return INVALID_MOVE;
+    if (flip_action == "skip" && skipper != undefined) {
+      let skipper_idx = active_player.entities.indexOf(skipper);
+      flip_card(active_player);
+      active_player.entities.splice(skipper_idx, 1);
+      skipped = true;
+      log_msg(G, ctx, `选择跳过`);
+      // Check finished here as finished is only checked after execute before
+      if (active_player.deck.length == 0) {
+        active_player.finished = true;
       }
     }
 
@@ -589,21 +585,34 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
     let ai = G.players[G.active_player_idx];
     if (G.next_action == "flip") {
       // AI IMPLEMENT: Flip action and execute action
-      let flip_action: FlipAction = "flip"
+      let flip_action: FlipAction = "flip";
+
+      // Play archive
       if (ai.hand.length > 0) {
         let archive = ai.hand[0];
         if (archive.effect_type != "aggressive" && archive.effect_type != "topdown") {
           flip_action = {archive_idx: 0};
         }
       }
-      // AI cannot skip, can only play archive
+
+      // Skip if protective is more important
+      if ((ai.entities.includes("skip")) && 
+      (ai.deck.length == 1 + ai.entities.filter(x => x == "skip").length) && 
+      (ai.deck.length != 1) && 
+      (ai.ai_behaviour.protective > ai.ai_behaviour.greedy) && 
+      (!ai.entities.includes("shield"))) {
+        console.log(`It's skip time! ${ai.deck.length} ${ai.entities}`);
+        flip_action = "skip";
+      }
+
       flip(G, ctx, G.active_player_idx, flip_action);
     }
     else if (G.next_action == "execute") {
       let execute_action: ExecuteAction = "execute";
       console.log(`AI Act: Greedy ${ai.ai_behaviour.greedy} Protective ${ai.ai_behaviour.protective}`)
-      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && ai.discard[0].fruit != undefined) {
-        execute_action = "fruit";
+      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && [...G.public_goals.filter(g => !g.is_achieved).map(g => g.greedy_goal), ai.goals[0].greedy_goal].filter(g => g != undefined).includes(ai.discard[0].fruit)) {
+        console.log(`It's fruit time! ${[...G.public_goals.map(g => g.greedy_goal), ai.goals[0].greedy_goal]} ${ai.discard[0].fruit}`);
+        execute_action = "fruit"
       }
       execute(G, ctx, G.active_player_idx, execute_action);
     }

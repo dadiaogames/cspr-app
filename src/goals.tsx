@@ -249,9 +249,11 @@ const check_requirements = (requirements: number[], score: number) => (G: IGame,
       player.score += score;
       self.is_achieved = true;
       G.gamelogs.unshift("和牌!");
+      console.log("和牌", self.desc, self.is_achieved);
     }
   }
   else {
+    console.log("Already achieved");
     return;
   }
 }
@@ -261,26 +263,31 @@ export const public_goals_raw: ICard[] = [
     name: "公共目标(4分)",
     desc: "AAA",
     effect: check_requirements([3,0,0], 4),
+    greedy_goal: 0,
   },
   {
     name: "公共目标(4分)",
     desc: "BBB",
     effect: check_requirements([0,3,0], 4),
+    greedy_goal: 1,
   },
   {
     name: "公共目标(4分)",
     desc: "CCC",
     effect: check_requirements([0,0,3], 4),
+    greedy_goal: 2,
   },
   {
     name: "公共目标(2分)",
     desc: "AA",
     effect: check_requirements([2,0,0], 2),
+    greedy_goal: 0,
   },
   {
     name: "公共目标(2分)",
     desc: "BB",
     effect: check_requirements([0,2,0], 2),
+    greedy_goal: 1,
   },
   {
     name: "公共目标(2分)",
@@ -291,6 +298,7 @@ export const public_goals_raw: ICard[] = [
     name: "公共目标(5分)",
     desc: "ABC",
     effect: check_requirements([1,1,1], 5),
+    greedy_goal: 2,
   },
   // {
   //   name: "公共目标(3分)",
