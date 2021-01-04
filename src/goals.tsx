@@ -41,7 +41,8 @@ export const goals_raw: ICard[] = [
   {
     name: "目标: 击杀上家",
     desc: "如果上家已经出局，则获得3分",
-    stackable: true,
+    // stackable: true,
+    aggressive_goal: 3,
     effect(G, ctx, player) {
       let player_idx = G.players.indexOf(player);
       let target_idx = (player_idx + 3) % 4;
@@ -55,7 +56,8 @@ export const goals_raw: ICard[] = [
 {
     name: "目标: 击杀下家",
     desc: "如果下家已经出局，则获得3分",
-    stackable: true,
+    // stackable: true,
+    aggressive_goal: 1,
     effect(G, ctx, player) {
       let player_idx = G.players.indexOf(player);
       let target_idx = (player_idx + 1) % 4;
@@ -68,42 +70,70 @@ export const goals_raw: ICard[] = [
   },
 
 {
-    name: "目标: 保护上家",
-    desc: "如果上家依然存活，则获得1分，否则失去1分",
+    name: "目标: 保上搞下",
+    desc: "如果上家依然存活且下家被击杀，则获得5分",
+    aggressive_goal: 1,
+    protective_goal: 3,
     effect(G, ctx, player) {
       let player_idx = G.players.indexOf(player);
-      let target_idx = (player_idx + 3) % 4;
-      let target = G.players[target_idx];
+      let protect_target = G.players[(player_idx + 3) % 4];
+      let eliminate_target = G.players[(player_idx + 1) % 4];
 
-      if (target.out != true) {
-        player.score += 1;
-      }
-      else {
-        player.score -= 1;
+      if (protect_target.out != true && eliminate_target.out == true) {
+        player.score += 5;
       }
     }
   },
-
-  {
-    name: "目标: 保护下家",
-    desc: "如果下家依然存活，则获得1分，否则失去1分",
+{
+    name: "目标: 保下搞上",
+    desc: "如果下家依然存活且上家被击杀，则获得5分",
+    aggressive_goal: 3,
+    protective_goal: 1,
     effect(G, ctx, player) {
       let player_idx = G.players.indexOf(player);
-      let target_idx = (player_idx + 1) % 4;
-      let target = G.players[target_idx];
-      if (target.out != true) {
-        player.score += 1;
-      }
-      else {
-        player.score -= 1;
+      let protect_target = G.players[(player_idx + 1) % 4];
+      let eliminate_target = G.players[(player_idx + 3) % 4];
+
+      if (protect_target.out != true && eliminate_target.out == true) {
+        player.score += 5;
       }
     }
   },
-
+  // {
+  //   name: "目标: 保护下家",
+  //   desc: "如果下家依然存活，则获得2分，否则失去1分",
+  //   effect(G, ctx, player) {
+  //     let player_idx = G.players.indexOf(player);
+  //     let target_idx = (player_idx + 1) % 4;
+  //     let target = G.players[target_idx];
+  //     if (target.out != true) {
+  //       player.score += 2;
+  //     }
+  //     else {
+  //       player.score -= 1;
+  //     }
+  //   }
+  // },
+  // {
+  //   name: "目标: 保护上家",
+  //   desc: "如果上家依然存活，则获得2分，否则失去1分",
+  //   effect(G, ctx, player) {
+  //     let player_idx = G.players.indexOf(player);
+  //     let target_idx = (player_idx + 3) % 4;
+  //     let target = G.players[target_idx];
+  //     if (target.out != true) {
+  //       player.score += 2;
+  //     }
+  //     else {
+  //       player.score -= 1;
+  //     }
+  //   }
+  // },
   {
     name: "目标: 西红柿",
     // desc: <span>如果你拥有2/3/4个{FRUITS[0]}，则获得2/4/7分</span>,
     desc: "如果你拥有2/3/4个西红柿，则获得2/4/7分",
+    greedy_goal: 0,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 0);
     }
@@ -112,6 +142,7 @@ export const goals_raw: ICard[] = [
     name: "目标: 柠檬",
     // desc: <span>如果你拥有2/3/4个{FRUITS[1]}，则获得2/4/7分</span>,
     desc: "如果你拥有2/3/4个柠檬，则获得2/4/7分",
+    greedy_goal: 1,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 1);
     }
@@ -120,6 +151,7 @@ export const goals_raw: ICard[] = [
     name: "目标: 青苹果",
     // desc: <span>如果你拥有2/3/4个{FRUITS[2]}，则获得2/4/7分</span>,
     desc: "如果你拥有2/3/4个苹果，则获得2/4/7分",
+    greedy_goal: 2,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 2);
     }
@@ -143,6 +175,7 @@ export const goals_raw: ICard[] = [
   {
     name: "目标: 玩个刺激的",
     desc: "如果你的弃牌堆中有\"引爆\"，则获得2分",
+    target_card: "引爆",
     effect(G, ctx, player) {
       let card = player.discard.find(x => x.name == "引爆");
       if (card != undefined) {
@@ -150,16 +183,49 @@ export const goals_raw: ICard[] = [
       }
     }
   },
+  // {
+  //   name: "目标: 机会",
+  //   desc: "如果你的弃牌堆中有\"机会\"，则获得2分",
+  //   effect(G, ctx, player) {
+  //     let card = player.discard.find(x => x.name == "机会");
+  //     if (card != undefined) {
+  //       player.score += 2;
+  //     }
+  //   }
+  // },
   {
-    name: "目标: 机会",
-    desc: "如果你的弃牌堆中有\"机会\"，则获得2分",
+    name: "目标: 险中求胜",
+    desc: "如果你的弃牌堆中有\"炸弹\"，则获得3分",
     effect(G, ctx, player) {
-      let card = player.discard.find(x => x.name == "机会");
-      if (card != undefined) {
+      let boom = player.discard.find(x => x.name == "炸弹");
+      if (boom != undefined) {
+        player.score += 3;
+      }
+    }
+  },
+  {
+    name: "目标: 领导力",
+    desc: "如果你的弃牌堆中有\"集体\"类牌，则获得2分",
+    effect(G, ctx, player) {
+      let leader = player.discard.find(x => x.name.includes("集体"));
+      if (leader != undefined) {
         player.score += 2;
       }
     }
   },
+  
+  {
+    name: "目标: 飞鞋",
+    desc: "如果你至少拥有2个\"鞋子\"，则获得2分",
+    target_card: "鞋子",
+    effect(G, ctx, player) {
+      let shoes = player.entities.filter(x => x == "skip");
+      if (shoes.length >= 2) {
+        player.score += 2;
+      }
+    }
+  }
+  ,
 ];
 
 export const GOALS = goals_raw.map(process_goal);
@@ -192,41 +258,62 @@ const check_requirements = (requirements: number[], score: number) => (G: IGame,
 
 export const public_goals_raw: ICard[] = [
   {
-    name: "公共目标(3分)",
+    name: "公共目标(4分)",
     desc: "AAA",
-    effect: check_requirements([3,0,0], 3),
+    effect: check_requirements([3,0,0], 4),
   },
   {
-    name: "公共目标(3分)",
+    name: "公共目标(4分)",
     desc: "BBB",
-    effect: check_requirements([0,3,0], 3),
+    effect: check_requirements([0,3,0], 4),
   },
   {
-    name: "公共目标(3分)",
+    name: "公共目标(4分)",
     desc: "CCC",
-    effect: check_requirements([0,0,3], 3),
+    effect: check_requirements([0,0,3], 4),
   },
   {
-    name: "公共目标(4分)",
+    name: "公共目标(2分)",
+    desc: "AA",
+    effect: check_requirements([2,0,0], 2),
+  },
+  {
+    name: "公共目标(2分)",
+    desc: "BB",
+    effect: check_requirements([0,2,0], 2),
+  },
+  {
+    name: "公共目标(2分)",
+    desc: "CC",
+    effect: check_requirements([0,0,2], 2),
+  },
+  {
+    name: "公共目标(5分)",
     desc: "ABC",
-    effect: check_requirements([1,1,1], 4),
+    effect: check_requirements([1,1,1], 5),
   },
-  {
-    name: "公共目标(4分)",
-    desc: "AABB",
-    effect: check_requirements([2,2,0], 4),
-  },
-  {
-    name: "公共目标(4分)",
-    desc: "AACC",
-    effect: check_requirements([2,0,2], 4),
-  },
-  {
-    name: "公共目标(4分)",
-    desc: "BBCC",
-    effect: check_requirements([0,2,2], 4),
-  },
+  // {
+  //   name: "公共目标(3分)",
+  //   desc: "AAB",
+  //   effect: check_requirements([2,1,0], 3),
+  // },
+  // {
+  //   name: "公共目标(3分)",
+  //   desc: "ACC",
+  //   effect: check_requirements([1,0,2], 3),
+  // },
+  // {
+  //   name: "公共目标(3分)",
+  //   desc: "BBC",
+  //   effect: check_requirements([0,2,1], 3),
+  // },
+  // {
+  //   name: "公共目标(3分)",
+  //   desc: "归档区有2张牌",
+  //   effect(G, ctx, player) {
 
+  //   },
+  // },
 ];
 
 export const PUBLIC_GOALS = public_goals_raw.map(process_public_goal);

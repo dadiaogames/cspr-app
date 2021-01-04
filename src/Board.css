@@ -216,7 +216,7 @@ body {
   display: flex;
   height: 75%;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
 }
 
@@ -225,6 +225,7 @@ body {
   height: 22%;
   justify-content: space-around;
   align-items: center;
+  margin: 2% auto 2% auto;
 }
 
 .gb-back-button {

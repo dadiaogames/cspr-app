@@ -161,7 +161,7 @@ function hand_processor(S: IState): (card: ICard, idx: number) => ICard {
 
 function get_player_info(player: IPlayer, G: IGame, S: IState): string | EL[] {
   if (G.phase == "place") {
-    if (player.previous_action != undefined) {
+    if (player.previous_action != -1) {
       let target_idx = (G.players.indexOf(player) + player.previous_action) % 4;
       if (target_idx == S.player_idx && player.previous_action != 0) {
         return "扣给你";
@@ -248,7 +248,7 @@ function Goal(props: {goal: Partial<ICard>}) {
 
 function process_public_goal(desc: string|EL): EL {
   let fruits_lookup: Record<string, EL> = {A:FRUITS[0], B:FRUITS[1], C:FRUITS[2]};
-  return (desc as string).split("").map(char => fruits_lookup[char]);
+  return (desc as string).split("").map(char => fruits_lookup[char]?fruits_lookup[char]:char);
 }
 
 function GoalBoard(props: BoardProps) {

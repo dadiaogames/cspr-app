@@ -31,6 +31,7 @@ export interface ICard {
   desc: string | EL,
   illust?: string,
   effect: (G: IGame, ctx: Ctx, player: IPlayer, self?: ICard) => void,
+  effect_type?: "aggressive" | "protective" | "greedy" | "topdown",
   has_fruit?: boolean,
   fruit?: number,
   selected?: boolean,
@@ -38,6 +39,26 @@ export interface ICard {
   stackable?: boolean,
   is_public?: boolean,
   is_achieved?: boolean,
+
+  aggressive_goal?: number,
+  protective_goal?: number,
+  greedy_goal?: number,
+  target_card?: string,
+}
+
+export interface ICardWeight {
+  weight: number,
+  direction: number[],
+}
+
+export interface IBehaviour {
+  greedy: number,
+  aggressive: number,
+  protective: number,
+  topdown: number,
+
+  greedy_growth: number,
+  protective_growth: number,
 }
 
 export interface IPlayer {
@@ -51,12 +72,15 @@ export interface IPlayer {
 
   entities: Entity[],
 
-  previous_action?: number,
+  previous_action: number,
+  previous_actions: number[],
 
   finished?: boolean,
   out?: boolean,
 
   placed?: boolean,
+
+  ai_behaviour: IBehaviour,
 }
 
 export interface IAction {

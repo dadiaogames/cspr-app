@@ -5,7 +5,7 @@ import { Ctx, Move as GeneralMove } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { CARDS } from './cards';
 
-import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction } from './types';
+import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction, ICardWeight } from './types';
 import { AVATARS } from './assets';
 import { GOALS, PUBLIC_GOALS } from './goals';
 import { PRNG } from './utils';
@@ -30,7 +30,7 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(G:IGame, ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(3, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(1, () => "加速"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(2, ()=>"机会"),];
+  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(2, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(2, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(1, ()=>"机会"), "集体拆弹", "集体引爆", "集体归档", "果汁", "果汁"];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
@@ -50,12 +50,22 @@ function setup_player(): IPlayer {
 
     entities: ["skip"],
 
-    previous_action: undefined,
+    previous_action: -1,
+    previous_actions: [],
 
     finished: false,
     out: false,
 
     // TODO: add goals
+
+    ai_behaviour: {
+      aggressive: 0,
+      greedy: 0,
+      topdown: 0,
+      protective: 0,
+      greedy_growth: 0,
+      protective_growth: 0,
+    },
   };
 
   return P;
@@ -64,9 +74,22 @@ function setup_player(): IPlayer {
 const init_draft: Move = (G, ctx) => {
   // After all cards are into the deck and deck is shuffled
   for (let player of G.players) {
-    player.hand = G.deck.slice(0, 7);
-    G.deck = G.deck.slice(7);
+    let num_cards = 7;
+    player.hand = G.deck.slice(0, num_cards);
+    G.deck = G.deck.slice(num_cards);
+
+    player.previous_actions = [];
+
+    player.ai_behaviour = {
+      aggressive: G.rng.randRange(10),
+      protective: G.rng.randRange(10),
+      greedy: G.rng.randRange(10),
+      topdown: G.rng.randRange(10),
+      greedy_growth: G.rng.randRange(3),
+      protective_growth: G.rng.randRange(3),
+    };
   }
+
 };
 
 const add_avatars: Move = (G, ctx) => {
@@ -85,10 +108,11 @@ const init_goals: Move = (G, ctx) => {
   // Debug is 1, then change to 2
   for (let i=0; i<G.players.length; i++) {
     let player = G.players[i];
-    player.goals = goals.slice(2*i, 2*i+2);
+    // player.goals = goals.slice(2*i, 2*i+2);
+    player.goals = goals.slice(i, i+1);
   }
 
-  G.public_goals = G.rng.shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,1);
+  G.public_goals = G.rng.shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,2);
 }
 
 const init_round: Move = (G, ctx) => {
@@ -106,7 +130,7 @@ const init_round: Move = (G, ctx) => {
     player.entities = ["skip"];
     player.out = false;
     player.finished = false;
-    player.previous_action = undefined;
+    player.previous_action = -1;
   }
 
   init_goals(G, ctx);
@@ -138,6 +162,7 @@ function setup(ctx: Ctx): IGame {
   };
 
   console.log(`How many Players AI: ${ctx.numPlayers} ${G.ai_players}`);
+  
 
   return G;
 }
@@ -147,6 +172,8 @@ export const setup_scenario: Move = (G, ctx, seed) => {
   add_avatars(G, ctx);
   init_round(G, ctx);
   G.f2 = () => "f12";
+
+  
 }
 
 export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) {
@@ -195,8 +222,137 @@ const place: Move = (G, ctx, from_idx: number, card_idx: number, direction: numb
 const ai_moves: Move = (G, ctx) => {
   for (let idx of G.ai_players) {
     // AI IMPLEMENT: card_idx and direction
-    let card_idx = G.rng.randRange(G.players[idx].hand.length);
-    let direction = G.rng.randRange(G.players.length);
+    // let card_idx = G.rng.randRange(G.players[idx].hand.length);
+    // let direction = G.rng.randRange(G.players.length);
+    let ai = G.players[idx];
+    let card_weights: ICardWeight[] = [];
+    for (let i=0; i<ai.hand.length; i++) {
+      card_weights.push({
+        weight: 0,
+        direction: [],
+      }); 
+    }
+    let top = [...G.players].sort((a,b) => b.score - a.score)[0];
+
+    // Growth
+    if (top == ai) {
+      ai.ai_behaviour.topdown = 0;
+    }
+    let danger = 0;
+    for (let p of G.players) {
+      if (p.previous_action && ((G.players.indexOf(p)+p.previous_action) % 4 == idx)) {
+        danger += 1;
+      }
+    }
+    if (danger == 0) {
+      ai.ai_behaviour.greedy += ai.ai_behaviour.greedy_growth;
+    }
+    else {
+      // ai.ai_behaviour.greedy -= ai.ai_behaviour.protective_growth;
+      ai.ai_behaviour.greedy = G.rng.randRange(10);
+      ai.ai_behaviour.protective_growth += ai.ai_behaviour.protective_growth;
+    }
+
+    // Aggressive goals
+    for (let goal of ai.goals) {
+      if (goal.aggressive_goal) {
+        for (let i=0; i<ai.hand.length; i++) {
+          let card = ai.hand[i];
+          let weight = card_weights[i];
+          if (card.effect_type == "aggressive") {
+            weight.weight += ai.ai_behaviour.aggressive + 1;
+            weight.direction.push(goal.aggressive_goal);
+          }
+        }
+      }
+      if (goal.greedy_goal) {
+        for (let i=0; i<ai.hand.length; i++) {
+          let card = ai.hand[i];
+          let weight = card_weights[i];
+          if (card.fruit == goal.greedy_goal) {
+            weight.weight += ai.ai_behaviour.greedy;
+            weight.direction.push(0);
+          }
+        }
+      }
+      if (goal.target_card) {
+        for (let i=0; i<ai.hand.length; i++) {
+          let card = ai.hand[i];
+          let weight = card_weights[i];
+          if (card.name == goal.target_card) {
+            weight.weight += ai.ai_behaviour.greedy;
+            weight.direction.push(0);
+          }
+        }
+      }
+    }
+    // Greedy
+    for (let i=0; i<ai.hand.length; i++) {
+      let card = ai.hand[i];
+      let weight = card_weights[i];
+      if (card.effect_type == "greedy") {
+        weight.weight += ai.ai_behaviour.greedy;
+        weight.direction.push(0);
+      }
+    }
+    // Protective
+    for (let i=0; i<ai.hand.length; i++) {
+      let card = ai.hand[i];
+      let weight = card_weights[i];
+      if (card.effect_type == "protective") {
+        weight.weight += ai.ai_behaviour.protective;
+        weight.direction.push(0);
+      }
+    }
+    // Topdown
+    for (let i=0; i<ai.hand.length; i++) {
+      let card = ai.hand[i];
+      let weight = card_weights[i];
+      if (card.effect_type == "topdown" || card.effect_type == "aggressive") {
+        weight.weight += ai.ai_behaviour.topdown;
+        weight.direction.push((4 + G.players.indexOf(top) - idx)%4);
+      }
+    }
+    // Disturb
+    let to_disturb = [0,0,0,0];
+    to_disturb[idx] = -99;
+    for (let i=0; i<G.players.length; i++) {
+      let player = G.players[i];
+      for (let j=0; j<G.players.length; j++) {
+        if (i != j) {
+          let another_player = G.players[j];
+          for (let previous_action of another_player.previous_actions) {
+            if ((j + previous_action) % 4 == i) {
+              to_disturb[i] += 1;
+            }
+          }
+        }
+      }
+    }
+    let disturb_direction = (4 + ((to_disturb.indexOf(0) + 4) % 4) - idx) % 4;
+    for (let i=0; i<ai.hand.length; i++) {
+      let card = ai.hand[i];
+      let weight = card_weights[i];
+      if (card.effect_type == "topdown" || card.effect_type == "aggressive") {
+        weight.weight += ai.ai_behaviour.aggressive * ((7-ai.hand.length)/7);
+        weight.direction.push(disturb_direction);
+      }
+    }
+
+
+    let sorted_weights = [...card_weights];
+    sorted_weights.sort((a,b)=>b.weight - a.weight);
+    let card_idx = card_weights.indexOf(sorted_weights[0]);
+    let direction = 0;
+    if (sorted_weights[0].direction.length > 0) {
+      direction = G.rng.choice(sorted_weights[0].direction);
+    }
+
+    console.log("Weights:", card_weights);
+    if (direction == 0 && (ai.hand[card_idx].effect_type == "aggressive" || ai.hand[card_idx].effect_type == "topdown")) {
+      console.log("AI is doing something fool");
+    }
+
     G.actions.push({
       from_idx: idx,
       card_idx, 
@@ -250,6 +406,7 @@ const change_hands_or_enter_action_phase: Move = (G, ctx) => {
 const carry_actions: Move = (G, ctx) => {
   for (let action of G.actions) {
     place(G, ctx, action.from_idx, action.card_idx, action.direction);
+    G.players[action.from_idx].previous_actions!.push(action.direction);
   }
   G.actions = [];
 
@@ -273,12 +430,13 @@ const add_action: Move = (G, ctx, action: IAction) => {
   }
 };
 
-function flip_card(active_player: IPlayer) {
+export function flip_card(active_player: IPlayer) {
   let card = active_player.deck[0];
   if (card != undefined) {
     active_player.deck = active_player.deck.slice(1);
     active_player.discard.unshift(card);
   }
+  return card;
 }
 
 export function out(player: IPlayer) {
@@ -428,13 +586,25 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
 
 const ai_act: Move = (G, ctx, from_idx: number) => {
   if (G.ai_players.includes(G.active_player_idx) && (G.host == from_idx)) {
+    let ai = G.players[G.active_player_idx];
     if (G.next_action == "flip") {
       // AI IMPLEMENT: Flip action and execute action
       let flip_action: FlipAction = "flip"
+      if (ai.hand.length > 0) {
+        let archive = ai.hand[0];
+        if (archive.effect_type != "aggressive" && archive.effect_type != "topdown") {
+          flip_action = {archive_idx: 0};
+        }
+      }
+      // AI cannot skip, can only play archive
       flip(G, ctx, G.active_player_idx, flip_action);
     }
     else if (G.next_action == "execute") {
-      let execute_action: ExecuteAction = "execute"
+      let execute_action: ExecuteAction = "execute";
+      console.log(`AI Act: Greedy ${ai.ai_behaviour.greedy} Protective ${ai.ai_behaviour.protective}`)
+      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && ai.discard[0].fruit != undefined) {
+        execute_action = "fruit";
+      }
       execute(G, ctx, G.active_player_idx, execute_action);
     }
     else {
