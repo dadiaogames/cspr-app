@@ -617,7 +617,7 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
       // Skip if protective is more important
       if ((ai.entities.includes("skip")) && 
       (ai.deck.length == 1 + ai.entities.filter(x => x == "skip").length) && 
-      (ai.deck.length != 1) && 
+      (ai.deck.length > 1) && 
       (ai.ai_behaviour.protective > ai.ai_behaviour.greedy) && 
       (!ai.entities.includes("shield"))) {
         console.log(`It's skip time! ${ai.deck.length} ${ai.entities}`);

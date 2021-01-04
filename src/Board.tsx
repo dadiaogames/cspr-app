@@ -231,10 +231,13 @@ function GameBoard(props: BoardProps){
   </div>;
 }
 
-function Goal(props: {goal: Partial<ICard>}) {
+function Goal(props: {goal: Partial<ICard>, illust?: string, selected?: boolean}) {
   let goal_illust = (props.goal.is_public == true)? "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/green-salad_1f957.png":goal_illust_src;
+  if (props.illust) {
+    goal_illust = props.illust;
+  }
   return <div className="goal">
-    <div className="goal-illust-container">
+    <div className="goal-illust-container" style={{border: (props.selected)?"3px solid #52c41a":undefined}}>
       <img className="goal-illust" src={goal_illust} />
     </div>
     <div className="goal-desc-container">
@@ -264,9 +267,21 @@ function GoalBoard(props: BoardProps) {
   </div>;
 }
 
+function FinalBoard(props: BoardProps) {
+  return <div className="board">
+    <div className="goals-container">
+      {/* {props.G.public_goals.filter(goal => !goal.is_achieved).map(goal => <Goal goal={{name: goal.name, desc:process_public_goal(goal.desc), is_public:goal.is_public}} />)} */}
+      {/* {props.G.players[props.S.player_idx].goals.map(goal => <Goal goal={{name: goal.name, desc:goal.desc, is_public:goal.is_public}}/>)} */}
+      {props.G.players.map(p => ({...p})).sort((a,b)=>b.score-a.score).map((player, idx) => <Goal goal={{name: `${idx+1}位`, desc: `${player.score}分`}} illust={player.illust} selected={player.illust == props.G.players[props.S.player_idx].illust} />)}
+    </div>
+    {/* <button className="gb-back-button" onClick={() => props.actions.change_board("GameBoard")} >返回</button> */}
+  </div>;
+}
+
 const BOARDS: Record<string, (props:BoardProps)=>JSX.Element> = {
   GameBoard,
   GoalBoard,
+  FinalBoard,
 };
 
 export function Board(props: BGBoardProps<IGame>) {
@@ -318,6 +333,12 @@ export function Board(props: BGBoardProps<IGame>) {
 
   //@ts-ignore
   useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
+
+  useEffect(() => {
+    if (props.G.round >= 8) {
+      actions.change_board("FinalBoard");
+    }
+  }, [props.G.round]);
 
   let board: (props:BoardProps) => JSX.Element = BOARDS[S.board] || GameBoard;
   // let board = GoalBoard;
