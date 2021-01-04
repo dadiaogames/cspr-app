@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/cspr-app/static/css/main.fe8b5469.chunk.css",
-    "main.js": "/cspr-app/static/js/main.d4efb4b2.chunk.js",
-    "main.js.map": "/cspr-app/static/js/main.d4efb4b2.chunk.js.map",
+    "main.css": "/cspr-app/static/css/main.018cb2c3.chunk.css",
+    "main.js": "/cspr-app/static/js/main.8fb2c5cc.chunk.js",
+    "main.js.map": "/cspr-app/static/js/main.8fb2c5cc.chunk.js.map",
     "runtime-main.js": "/cspr-app/static/js/runtime-main.44a22d0d.js",
     "runtime-main.js.map": "/cspr-app/static/js/runtime-main.44a22d0d.js.map",
     "static/js/2.a582442e.chunk.js": "/cspr-app/static/js/2.a582442e.chunk.js",
@@ -10,13 +10,13 @@
     "static/js/3.d7d3cfca.chunk.js": "/cspr-app/static/js/3.d7d3cfca.chunk.js",
     "static/js/3.d7d3cfca.chunk.js.map": "/cspr-app/static/js/3.d7d3cfca.chunk.js.map",
     "index.html": "/cspr-app/index.html",
-    "static/css/main.fe8b5469.chunk.css.map": "/cspr-app/static/css/main.fe8b5469.chunk.css.map",
+    "static/css/main.018cb2c3.chunk.css.map": "/cspr-app/static/css/main.018cb2c3.chunk.css.map",
     "static/js/2.a582442e.chunk.js.LICENSE.txt": "/cspr-app/static/js/2.a582442e.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.44a22d0d.js",
     "static/js/2.a582442e.chunk.js",
-    "static/css/main.fe8b5469.chunk.css",
-    "static/js/main.d4efb4b2.chunk.js"
+    "static/css/main.018cb2c3.chunk.css",
+    "static/js/main.8fb2c5cc.chunk.js"
   ]
 }
