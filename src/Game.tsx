@@ -65,6 +65,7 @@ function setup_player(): IPlayer {
       protective: 0,
       greedy_growth: 0,
       protective_growth: 0,
+      topdown_growth: 0,
     },
   };
 
@@ -87,6 +88,7 @@ const init_draft: Move = (G, ctx) => {
       topdown: G.rng.randRange(10),
       greedy_growth: G.rng.randRange(3),
       protective_growth: G.rng.randRange(3),
+      topdown_growth: G.rng.randRange(5),
     };
   }
 
@@ -172,8 +174,11 @@ export const setup_scenario: Move = (G, ctx, seed) => {
   add_avatars(G, ctx);
   init_round(G, ctx);
   G.f2 = () => "f12";
+}
 
-  
+export const set_ai_players: Move = (G, ctx, num_ai) => {
+  G.ai_players = [0,1,2,3].slice(-num_ai);
+  console.log("New AI Players", G.ai_players);
 }
 
 export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) {
@@ -188,7 +193,7 @@ export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) 
 }
 
 function all_finished(G: IGame): boolean {
-  let unfinished_player = G.players.find(x => !x.finished);
+  let unfinished_player = G.players.find(x => !(x.finished || x.out));
   if (unfinished_player != undefined) {
     return false;
   }
@@ -199,7 +204,7 @@ function all_finished(G: IGame): boolean {
 
 function get_next_idx(players: IPlayer[], current_idx: number): number {
   let next_idx = (current_idx + 1) % (players.length);
-  if (players[next_idx].finished) {
+  if (players[next_idx].finished || players[next_idx].out) {
     return get_next_idx(players, next_idx);
   }
   else {
@@ -231,11 +236,23 @@ const ai_moves: Move = (G, ctx) => {
         direction: [],
       }); 
     }
-    let top = [...G.players].sort((a,b) => b.score - a.score)[0];
+    let sorted_by_score = [...G.players].sort((a,b) => b.score - a.score);
+    let top = sorted_by_score[0];
 
     // Growth
     if (top == ai) {
-      ai.ai_behaviour.topdown = 0;
+      // ai.ai_behaviour.topdown = 0;
+      top = sorted_by_score[1];
+    }
+
+    if (G.round >= 4) {
+      if (sorted_by_score.slice(0,2).includes(ai)) {
+        ai.ai_behaviour.topdown += ai.ai_behaviour.topdown_growth;
+        ai.ai_behaviour.protective += ai.ai_behaviour.protective_growth;
+      }
+      else {
+        ai.ai_behaviour.greedy += ai.ai_behaviour.greedy_growth;
+      }
     }
     let danger = 0;
     for (let p of G.players) {
@@ -447,6 +464,7 @@ export function out(player: IPlayer) {
   else {
     console.log(`Player ${player.score}分 is out`)
     player.out = true;
+    player.finished = true;
   }
 }
 
@@ -571,6 +589,7 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
     }
 
     // Check finished
+    // EH: move all "finished" into a getter function, just check whether is out or deck length is 0, this is the best way to "finish"
     player.finished = (player.out || (player.deck.length == 0));
 
     proceed(G, ctx);
@@ -638,6 +657,7 @@ export const CSPR = {
     ai_act,
     log_msg,
     setup_scenario,
+    set_ai_players,
   },
   minPlayers: 1,
   maxPlayers: 4,

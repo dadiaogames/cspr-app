@@ -16,6 +16,7 @@ const SERVER = SocketIO({server:"47.96.2.148:8000"});
 interface IAppState {
   scene: string,
   game_instance: {matchID: string, playerID: string} | undefined,
+  ai_players: number,
 }
 
 // const App = Client({
@@ -60,7 +61,7 @@ const CSPRLobby = (props:any) => {
 const App = () => {
   let [S, setS] = useState<IAppState>({
     scene: "Title",
-    in_game: false,
+    // in_game: false,
   });
 
   const scenes: Record<string, JSX.Element> = {
@@ -77,10 +78,15 @@ const App = () => {
     },
     finish_game: () => setS({...S, game_instance:undefined}),
     direct_enter: () => {
-      let game_data = prompt("输入对局代码:");
-      let playerID = game_data.slice(-1);
-      let matchID = game_data.slice(0,-1);
+      let game_data = prompt("输入对局代码:")
+      let playerID = game_data[4];
+      let matchID = game_data.slice(0,4);
+      let ai_players = game_data[6];
       setS({...S, game_instance:{matchID, playerID}});
+      if (ai_players) {
+        console.log("There are some ai players");
+        setS({...S, ai_players: parseInt(ai_players)});
+      }
     },
   }
 
@@ -95,7 +101,7 @@ const App = () => {
       numPlayers: 4,
       // seed: S.game_instance.matchID,
     });
-    Scene = () => <GameInstance matchID={S.game_instance.matchID} playerID={S.game_instance.playerID} />;
+    Scene = (props:any) => <GameInstance matchID={S.game_instance.matchID} playerID={S.game_instance.playerID} {...props} />;
   }
 
   return <Scene {...{S, actions}} />;

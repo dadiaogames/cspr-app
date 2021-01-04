@@ -45,9 +45,10 @@ function CardAreas(props: {cardNum: number, playedCard?: ICard}) {
   </div>;
 }
 
-function Avatar(props: {illust?: string, selected?: boolean, out?: boolean}) {
+function Avatar(props: {illust?: string, selected?: boolean, out?: boolean, placed?: boolean}) {
   return <div className="avatar" style={{border:(props.selected)?"3px solid #61dafb":(props.out)?"1px solid #f5222d":undefined}}>
     <img src={props.illust} className="avatar-img" />
+    <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/twitter/259/check-mark-button_2705.png" className="tick-icon" style={{display: props.placed? undefined : "none"}} />
   </div>;
 }
 
@@ -66,7 +67,7 @@ export interface IPlayerInfo extends IPlayer {
 
 function PlayerInfo(props: IPlayerInfo) {
   return <div className="player-info">
-    <Avatar illust={props.illust} selected={props.selected} out={props.out} />
+    <Avatar illust={props.illust} selected={props.selected} out={props.out} placed={props.placed} />
     <InfoLine content={`${props.name}(${props.score}分)`} />
     <InfoLine content={props.info}/>
   </div>;
@@ -224,7 +225,7 @@ function GameBoard(props: BoardProps){
     />
     <CardRow 
       cards = {props.G.players[props.S.player_idx].hand.map(hand_processor(props.S))}  
-      handleCardClick = {idx => () => props.actions.select_hand(idx, props.G.players[props.S.player_idx].hand)}
+      handleCardClick = {idx => () => props.actions.select_hand(idx, props.G.players[props.S.player_idx])}
     />
     <TopPanel gameCount={`${"東南西"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} />
   </div>;
@@ -314,6 +315,9 @@ export function Board(props: BGBoardProps<IGame>) {
       props.moves.setup_scenario(Date());
     }
   }, []);
+
+  //@ts-ignore
+  useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
 
   let board: (props:BoardProps) => JSX.Element = BOARDS[S.board] || GameBoard;
   // let board = GoalBoard;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IState, Action, Phase, IOperation, IGame, ICard, FlipAction } from './types'
+import { IState, Action, Phase, IOperation, IGame, ICard, FlipAction, IPlayer } from './types'
 
 export function init_state(): IState {
   return {
@@ -96,14 +96,17 @@ export function get_operations(G: IGame, S: IState): IOperation[] {
   }
 }
 
-const select_hand: Action = (S, idx: number, hand: ICard[]) => {
+const select_hand: Action = (S, idx: number, player: IPlayer) => {
   change_hand_selected(S, idx);
-  let card = hand[idx];
-  log_msg(S, <span>{card.name}: {card.desc}</span>);
+  let card = player.hand[idx];
+  if (!player.placed) {
+    log_msg(S, <span>{card.name}: {card.desc}</span>);
+  }
 }
 
 const clear_state: Action = (S) => {
   S.hand_selected = undefined;
+  // log_msg(S, "已扣牌");
 }
 
 const change_board: Action = (S, board) => {

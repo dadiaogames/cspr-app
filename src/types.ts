@@ -59,6 +59,7 @@ export interface IBehaviour {
 
   greedy_growth: number,
   protective_growth: number,
+  topdown_growth: number,
 }
 
 export interface IPlayer {

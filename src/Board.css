@@ -121,6 +121,7 @@ body {
   height: 96%;
   width: 36%;
   display: flex;
+  position: relative;
   justify-content: center;
   align-items: center;
 }
@@ -128,6 +129,14 @@ body {
 .avatar-img {
   height: auto;
   width: 100%;
+}
+
+.tick-icon {
+  position: absolute;
+  left: 67%;
+  top: 71%;
+  height: 1em;
+  width: auto;
 }
 
 .info-line {
