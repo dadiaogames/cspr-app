@@ -42,6 +42,10 @@ const SingleClient = Client({
 //   </div>
 // };
 
+function introduce_gameplay() {
+  alert("欢迎来到《雀魂：爆炸一姬》！\n游戏目标：在8局之后，分数全场最高\n每盘游戏由8局组成(东1局-南4局)，每局由两个阶段组成：\n* 扣牌阶段：将1张牌扣到任意一名玩家面前，重复7次；\n* 翻牌阶段：洗混扣在自己面前的所有牌，然后一张一张地翻开；\n翻到炸弹时直接出局，翻到护甲时可抵挡一次炸弹，翻到操作牌时则执行其效果，\"目标牌\"在牌堆最底层，翻开后如果达成目标，就能获得分数；\n(额外说明：翻牌阶段，如果翻到左上角有水果的操作牌时，则要做出抉择：是将这张牌作为操作还是作为水果)\n举例：\n* 东1局，扣牌阶段，一姬的目标是\"击杀下家\"，因此一姬将一张炸弹扣给了下家\n* 一姬的下家，二姐，发现别人扣给自己牌，感觉不对，于是将一张\"护甲\"扣给了自己\n* 一姬的对家，女仆的目标是\"获得柠檬\"，因此女仆将手里一张左上角有\"柠檬\"的牌扣给了自己\n* 就这样扣了7次之后，所有人洗混了自己面前的牌，进入翻牌阶段");
+}
+
 const Title = (props: {actions: any}) => {
   return <TitleScreen 
     title = "雀魂: 爆炸一姬"
@@ -49,7 +53,7 @@ const Title = (props: {actions: any}) => {
     operations = {[
       {name: "单人练习", effect: () => props.actions.changer("SingleClient")},
       {name: "多人运动", effect: () => props.actions.changer("CSPRLobby")},
-      {name: "玩法教学"},
+      {name: "玩法教学", effect: introduce_gameplay},
   ]}
   />;
 };
