@@ -246,7 +246,7 @@ const check_requirements = (requirements: number[], score: number) => (G: IGame,
     }, [0,0,0]);
     let diffs = fruits.map((cnt, idx) => (cnt - requirements[idx]) >= 0);
     let agari = !diffs.includes(false);
-    console.log(`D:${diffs}, F:${fruits}, A:${agari}`);
+    // console.log(`D:${diffs}, F:${fruits}, A:${agari}`);
     if (agari) {
       player.score += score;
       self.is_achieved = true;
@@ -255,7 +255,7 @@ const check_requirements = (requirements: number[], score: number) => (G: IGame,
     }
   }
   else {
-    console.log("Already achieved");
+    // console.log("Already achieved");
     return;
   }
 }

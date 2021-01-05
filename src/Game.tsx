@@ -5,7 +5,7 @@ import { Ctx, Move as GeneralMove } from 'boardgame.io';
 import { INVALID_MOVE } from 'boardgame.io/core';
 import { CARDS } from './cards';
 
-import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction, ICardWeight } from './types';
+import { IGame, ICard, IPlayer, IAction, FlipAction, ExecuteAction, ICardWeight, IBehaviour } from './types';
 import { AVATARS } from './assets';
 import { GOALS, PUBLIC_GOALS } from './goals';
 import { PRNG } from './utils';
@@ -40,7 +40,7 @@ function init_deck(G:IGame, ctx: Ctx): ICard[] {
   return G.rng.shuffle(deck);
 }
 
-function setup_player(): IPlayer {
+function setup_player(rng: PRNG): IPlayer {
   const P: IPlayer = {
     score: 0,
     hand: [],
@@ -59,13 +59,13 @@ function setup_player(): IPlayer {
     // TODO: add goals
 
     ai_behaviour: {
-      aggressive: 0,
-      greedy: 0,
-      topdown: 0,
-      protective: 0,
-      greedy_growth: 0,
-      protective_growth: 0,
-      topdown_growth: 0,
+      aggressive: rng.randRange(10),
+      protective: rng.randRange(10),
+      greedy: rng.randRange(10),
+      topdown: rng.randRange(10),
+      greedy_growth: rng.randRange(3),
+      protective_growth: rng.randRange(3),
+      topdown_growth: rng.randRange(5),
     },
   };
 
@@ -81,23 +81,17 @@ const init_draft: Move = (G, ctx) => {
 
     player.previous_actions = [];
 
-    player.ai_behaviour = {
-      aggressive: G.rng.randRange(10),
-      protective: G.rng.randRange(10),
-      greedy: G.rng.randRange(10),
-      topdown: G.rng.randRange(10),
-      greedy_growth: G.rng.randRange(3),
-      protective_growth: G.rng.randRange(3),
-      topdown_growth: G.rng.randRange(5),
-    };
+    if (player.preset_ai_behaviour) {
+      player.ai_behaviour = player.preset_ai_behaviour;
+    }
   }
 
 };
 
 const add_avatars: Move = (G, ctx) => {
   let len = G.players.length;
-  console.log(G.rng);
-  console.log(G.rng.shuffle);
+  // console.log(G.rng);
+  // console.log(G.rng.shuffle);
   let avatars = G.rng.shuffle(AVATARS).slice(0, len);
   for (let i=0; i<len; i++) {
     G.players[i].illust = avatars[i];
@@ -141,12 +135,12 @@ const init_round: Move = (G, ctx) => {
 
 // This is just for init
 function setup(ctx: Ctx): IGame {
+  const rng = new PRNG(114514);
   const G: IGame = {
     deck: [],
-    players: _.times(NUM_PLAYERS, setup_player),
+    players: _.times(NUM_PLAYERS, ()=>setup_player(rng)),
     public_goals: [],
-    rng: new PRNG(114514),
-
+    rng, 
     actions: [],
     round: -1,
     init_player: 0,
@@ -172,13 +166,64 @@ function setup(ctx: Ctx): IGame {
 export const setup_scenario: Move = (G, ctx, seed) => {
   G.rng = new PRNG(seed);
   add_avatars(G, ctx);
+  init_ai_behaviour(G, ctx);
   init_round(G, ctx);
-  G.f2 = () => "f12";
+  // G.f2 = () => "f12";
 }
 
 export const set_ai_players: Move = (G, ctx, num_ai) => {
   G.ai_players = [0,1,2,3].slice(-num_ai);
   console.log("New AI Players", G.ai_players);
+}
+
+export const init_ai_behaviour: Move = (G, ctx) => {
+  const BEHAVIOURS: IBehaviour[] = [
+    {
+      aggressive: 5,
+      protective: 5,
+      topdown: 0,
+      greedy: 7,
+      protective_growth: 0,
+      topdown_growth: 1,
+      greedy_growth: 4,
+    },
+    {
+      aggressive: 1,
+      protective: 4,
+      topdown: 3,
+      greedy: 5,
+      protective_growth: 6,
+      topdown_growth: 1,
+      greedy_growth: 1,
+    },
+    {
+      aggressive: 6,
+      protective: 6,
+      topdown: 6,
+      greedy: 9,
+      protective_growth: 0,
+      topdown_growth: 2,
+      greedy_growth: 0,
+    },
+    {
+      aggressive: 10,
+      protective: 10,
+      topdown: 2,
+      greedy: 7,
+      protective_growth: 0,
+      topdown_growth: 4,
+      greedy_growth: 6,
+    },
+  ];
+  for (let i=0; i<4; i++) {
+    G.players[i].preset_ai_behaviour = G.rng.choice(BEHAVIOURS);
+  }
+}
+
+export const set_ai_behaviours: Move = (G, ctx, behaviours: IBehaviour[]) => {
+  for (let i=0; i<4; i++) {
+    G.players[i].preset_ai_behaviour = behaviours[i];
+  }
 }
 
 export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) {
@@ -265,7 +310,8 @@ const ai_moves: Move = (G, ctx) => {
     }
     else {
       // ai.ai_behaviour.greedy -= ai.ai_behaviour.protective_growth;
-      ai.ai_behaviour.greedy = G.rng.randRange(10);
+      // ai.ai_behaviour.greedy = G.rng.randRange(10);
+      ai.ai_behaviour.greedy = ai.preset_ai_behaviour?.greedy || 0;
       ai.ai_behaviour.protective_growth += ai.ai_behaviour.protective_growth;
     }
 
@@ -364,7 +410,7 @@ const ai_moves: Move = (G, ctx) => {
       direction = G.rng.choice(sorted_weights[0].direction);
     }
 
-    console.log("Weights:", card_weights);
+    // console.log("Weights:", card_weights);
     if (direction == 0 && (ai.hand[card_idx].effect_type == "aggressive" || ai.hand[card_idx].effect_type == "topdown")) {
       console.log("AI is doing something fool");
     }
@@ -396,10 +442,10 @@ const change_hands_or_enter_action_phase: Move = (G, ctx) => {
   let hands = G.players.map(player => player.hand);
   let len = hands.length;
   let num_remained_cards = hands[0].length;
-  console.log(G.rng);
-  console.log("Shuffle:", G.rng.shuffle);
-  console.log("F1:", G.f1);
-  console.log("F2:", G.f2);
+  // console.log(G.rng);
+  // console.log("Shuffle:", G.rng.shuffle);
+  // console.log("F1:", G.f1);
+  // console.log("F2:", G.f2);
 
   if (num_remained_cards == 0) {
     console.log("Time to enter the action phase");
@@ -429,16 +475,18 @@ const carry_actions: Move = (G, ctx) => {
   change_hands_or_enter_action_phase(G, ctx);
 };
 
-const add_action: Move = (G, ctx, action: IAction) => {
-  G.actions.push(action);
-  G.players[action.from_idx].placed = true;
+const add_action: Move = (G, ctx, action?: IAction) => {
+  if (action != undefined) {
+    G.actions.push(action);
+    G.players[action.from_idx].placed = true;
 
-  // let host move
-  let from_idx = action.from_idx;
-  if (from_idx == G.host) {
-    ai_moves(G, ctx);
+    // let host move
+    let from_idx = action.from_idx;
+    if (from_idx == G.host) {
+      ai_moves(G, ctx);
+    }
+    // console.log(`Actions length: ${G.actions.length}`);
   }
-  console.log(`Actions length: ${G.actions.length}`);
 
   // Check whether it's full
   if (G.actions.length == G.players.length) {
@@ -583,7 +631,7 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
       console.log(`Just execute ${card.name}`);
       // Add functions
       card = (card.is_goal?GOALS:CARDS).find(x => x.name == card.name) as ICard;
-      console.log({...card});
+      // console.log({...card});
       card.effect && card.effect(G, ctx, player, card);
       log_msg(G, ctx, `执行 ${card.name}`);
     }
@@ -628,8 +676,9 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
     }
     else if (G.next_action == "execute") {
       let execute_action: ExecuteAction = "execute";
-      console.log(`AI Act: Greedy ${ai.ai_behaviour.greedy} Protective ${ai.ai_behaviour.protective}`)
-      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && [...G.public_goals.filter(g => !g.is_achieved).map(g => g.greedy_goal), ai.goals[0].greedy_goal].filter(g => g != undefined).includes(ai.discard[0].fruit)) {
+      // console.log(`AI Act: Greedy ${ai.ai_behaviour.greedy} Protective ${ai.ai_behaviour.protective}`)
+      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && 
+        [...G.public_goals.filter(g => !g.is_achieved).map(g => g.greedy_goal), ai.goals[0].greedy_goal].filter(g => g != undefined).includes(ai.discard[0].fruit)) {
         console.log(`It's fruit time! ${[...G.public_goals.map(g => g.greedy_goal), ai.goals[0].greedy_goal]} ${ai.discard[0].fruit}`);
         execute_action = "fruit"
       }
@@ -651,13 +700,15 @@ export const log_msg: Move = (G, ctx, msg: string) => {
 export const CSPR = {
   setup: setup,
   moves: {
+    setup_scenario,
+    set_ai_players,
+    set_ai_behaviours,
     add_action,
     flip,
     execute,
+    ai_moves,
     ai_act,
     log_msg,
-    setup_scenario,
-    set_ai_players,
   },
   minPlayers: 1,
   maxPlayers: 4,

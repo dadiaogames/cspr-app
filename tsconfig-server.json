@@ -25,5 +25,5 @@
     "noEmit": false,
     "outDir": "./build_server"
   },
-  "include": ["src/server.ts"]
+  "include": ["src/server.ts", "src/ai_test.ts"]
 }

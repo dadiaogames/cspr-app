@@ -82,6 +82,7 @@ export interface IPlayer {
   placed?: boolean,
 
   ai_behaviour: IBehaviour,
+  preset_ai_behaviour?: IBehaviour,
 }
 
 export interface IAction {
