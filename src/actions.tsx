@@ -6,6 +6,7 @@ export function init_state(): IState {
     board: "GoalBoard",
     player_idx: 0,
     log: "",
+    dream_count: 0,
   };
 }
 
@@ -117,9 +118,14 @@ const log_msg: Action = (S, msg) => {
   S.log = msg;
 }
 
+const enter_dream: Action = (S) => {
+  S.dream_count += 1;
+}
+
 export const ACTIONS: Record<string, Action> = {
   select_hand,
   clear_state,
   change_board,
   log_msg,
+  enter_dream,
 };

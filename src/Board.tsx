@@ -15,10 +15,10 @@ import { map_object, reorder } from './utils';
 import { COMBINED } from './combiner';
 import { goal_illust as goal_illust_src } from './assets';
 
-function TopPanel(props: {gameCount: string|number, checkGoal:()=>void}) {
+function TopPanel(props: {gameCount: string|number, checkGoal:()=>void, addAI:()=>void}) {
   return <div className="top-panel">
     <button className="check-goal-button" onClick={props.checkGoal} >查看目标</button>
-    {props.gameCount}
+    <div onClick={props.addAI}>{props.gameCount}</div>
   </div>;
 }
 
@@ -210,6 +210,15 @@ function process_player(player: IPlayer, idx: number, G: IGame, S: IState): IPla
 }
 
 function GameBoard(props: BoardProps){
+  const add_ai = () => {
+    let dream_count = props.S.dream_count + 1;
+    if (dream_count % 3 == 2) {
+      alert("增加了一个AI");
+      props.moves.set_ai_players(Math.ceil(dream_count / 3));
+    }
+    props.actions.enter_dream();
+  }
+
   return <div className="board">
     <Central 
       players = {reorder(props.G.players.map((player, idx) => process_player(player, idx, props.G, props.S)), [(props.S.player_idx+2)%4,(props.S.player_idx+3)%4,(props.S.player_idx+1)%4,props.S.player_idx])}
@@ -227,7 +236,7 @@ function GameBoard(props: BoardProps){
       cards = {props.G.players[props.S.player_idx].hand.map(hand_processor(props.S))}  
       handleCardClick = {idx => () => props.actions.select_hand(idx, props.G.players[props.S.player_idx])}
     />
-    <TopPanel gameCount={`${"東南西"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} />
+    <TopPanel gameCount={`${"東南西"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} addAI={add_ai} />
   </div>;
 }
 
@@ -332,7 +341,7 @@ export function Board(props: BGBoardProps<IGame>) {
   }, []);
 
   //@ts-ignore
-  useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
+  // useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
 
   useEffect(() => {
     if (props.G.round >= 8) {

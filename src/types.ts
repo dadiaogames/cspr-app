@@ -129,6 +129,8 @@ export interface IState {
 
   player_idx: number,
   log: string,
+
+  dream_count: number,
 }
 
 export interface IOperation {

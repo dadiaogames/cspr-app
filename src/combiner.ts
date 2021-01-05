@@ -1,5 +1,6 @@
-import { CombinedAction, Dispatcher, ExecuteAction, FlipAction } from './types';
+import { CombinedAction, Dispatcher, ExecuteAction, FlipAction, IState } from './types';
 
+// EH: Should be able to wait when a value is changed then make move, not only combine those things
 const add_place_action: CombinedAction = (moves, actions, from_idx: number, card_idx: number, direction: number) => {
   moves.add_action({from_idx, card_idx, direction});
   actions.clear_state();
