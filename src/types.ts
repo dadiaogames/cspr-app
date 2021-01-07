@@ -21,6 +21,7 @@ export interface IGame {
   host: number,
   ai_players: number[],
   gamelogs: string[],
+  num_moves: number,
 
   f1: () => string,
   f2: () => string,

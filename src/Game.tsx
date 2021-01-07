@@ -152,6 +152,7 @@ function setup(ctx: Ctx): IGame {
     host: 0,
     ai_players: [0,1,2,3].slice(ctx.numPlayers),
     gamelogs: [],
+    num_moves: 0,
 
     f1: () => "f1",
     f2: () => "f2",
@@ -459,6 +460,7 @@ const enter_action_phase: Move = (G, ctx) => {
 
   G.next_action = "flip";
   G.active_player_idx = G.init_player;
+  G.num_moves = 0;
 };
 
 
@@ -569,6 +571,7 @@ const enter_place_phase: Move = (G, ctx) => {
 }
 
 const proceed: Move = (G, ctx, skipped?: boolean) => {
+  G.num_moves += 1;
   if (G.next_action == "execute" || skipped) {
     // Check whether end the action phase, or pass to the next player
     // Or say that pass to the next player, and if there's nobody to pass, then enter the action phase
@@ -688,7 +691,8 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
 
       // Skip if protective is more important
       if ((ai.entities.includes("skip")) && 
-      (ai.deck.length > 2) && 
+      (ai.deck.length > 1) && 
+      (ai.deck.length < 5) && 
       (ai.goals[0].target_card != "鞋子") &&
       (ai.ai_behaviour.protective > ai.ai_behaviour.greedy) && 
       (!ai.entities.includes("shield"))) {

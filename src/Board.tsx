@@ -112,7 +112,7 @@ function Controller(props: {operations: IOperation[], combined: Record<string, D
     else {
       return;
     }
-  }, [props.G.active_player_idx, props.G.next_action]);
+  }, [props.G.active_player_idx, props.G.next_action, props.G.num_moves]);
 
   let operations = (autoMove)? [] : props.operations;
 
