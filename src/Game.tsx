@@ -178,6 +178,7 @@ export const set_ai_players: Move = (G, ctx, num_ai) => {
 
 export const init_ai_behaviour: Move = (G, ctx) => {
   const BEHAVIOURS: IBehaviour[] = [
+    // Average greedy
     {
       aggressive: 5,
       protective: 5,
@@ -187,6 +188,7 @@ export const init_ai_behaviour: Move = (G, ctx) => {
       topdown_growth: 1,
       greedy_growth: 4,
     },
+    // Protective growth
     {
       aggressive: 1,
       protective: 4,
@@ -196,15 +198,7 @@ export const init_ai_behaviour: Move = (G, ctx) => {
       topdown_growth: 1,
       greedy_growth: 1,
     },
-    {
-      aggressive: 6,
-      protective: 6,
-      topdown: 6,
-      greedy: 9,
-      protective_growth: 0,
-      topdown_growth: 2,
-      greedy_growth: 0,
-    },
+    // Aggressive growing greedy
     {
       aggressive: 10,
       protective: 10,
@@ -213,6 +207,36 @@ export const init_ai_behaviour: Move = (G, ctx) => {
       protective_growth: 0,
       topdown_growth: 4,
       greedy_growth: 6,
+    },
+    // Really greedy
+    {
+      aggressive: 1,
+      protective: 3,
+      topdown: 0,
+      greedy: 7,
+      protective_growth: 1,
+      topdown_growth: 0,
+      greedy_growth: 4,
+    },
+// Average with average growth
+    {
+      aggressive: 7,
+      protective: 7,
+      topdown: 1,
+      greedy: 10,
+      protective_growth: 5,
+      topdown_growth: 3,
+      greedy_growth: 4,
+    },
+// Topdown
+    {
+      aggressive: 7,
+      protective: 9,
+      topdown: 4,
+      greedy: 10,
+      protective_growth: 0,
+      topdown_growth: 6,
+      greedy_growth: 3,
     },
   ];
   for (let i=0; i<4; i++) {
@@ -664,8 +688,8 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
 
       // Skip if protective is more important
       if ((ai.entities.includes("skip")) && 
-      (ai.deck.length == 1 + ai.entities.filter(x => x == "skip").length) && 
-      (ai.deck.length > 1) && 
+      (ai.deck.length > 2) && 
+      (ai.goals[0].target_card != "鞋子") &&
       (ai.ai_behaviour.protective > ai.ai_behaviour.greedy) && 
       (!ai.entities.includes("shield"))) {
         console.log(`It's skip time! ${ai.deck.length} ${ai.entities}`);

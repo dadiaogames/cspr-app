@@ -196,12 +196,12 @@ export const goals_raw: ICard[] = [
   // },
   {
     name: "目标: 险中求胜",
-    desc: "如果你的弃牌堆中有\"炸弹\"，则获得3分",
+    desc: "如果你的弃牌堆中有\"炸弹\"，则获得2分",
     target_card: "拆弹",
     effect(G, ctx, player) {
       let boom = player.discard.find(x => x.name == "炸弹");
       if (boom != undefined) {
-        player.score += 3;
+        player.score += 2;
       }
     }
   },
