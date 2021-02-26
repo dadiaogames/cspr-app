@@ -30,7 +30,7 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(G:IGame, ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(2, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(2, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(1, ()=>"机会"), "集体拆弹", "集体引爆", "集体归档", "果汁", "果汁"];
+  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(2, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "果汁"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(1, ()=>"机会"), "集体拆弹", "集体归档", "果汁"];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
@@ -112,6 +112,9 @@ const init_goals: Move = (G, ctx) => {
 }
 
 const init_round: Move = (G, ctx) => {
+  // Reset values
+  G.num_places = 0;
+
   // Reset the deck, pass the init player
   G.phase = "place";
   G.round += 1;
@@ -152,6 +155,7 @@ function setup(ctx: Ctx): IGame {
     host: 0,
     ai_players: [0,1,2,3].slice(ctx.numPlayers),
     gamelogs: [],
+    num_places: 0,
     num_moves: 0,
 
     f1: () => "f1",
@@ -379,7 +383,12 @@ const ai_moves: Move = (G, ctx) => {
       let weight = card_weights[i];
       if (card.effect_type == "greedy") {
         weight.weight += ai.ai_behaviour.greedy;
-        weight.direction.push(0);
+        if (card.name != "送温暖") {
+          weight.direction.push(0);
+        }
+        else {
+          weight.direction.push(G.rng.choice([1,3]));
+        }
       }
     }
     // Protective
@@ -497,6 +506,7 @@ const carry_actions: Move = (G, ctx) => {
     G.players[action.from_idx].previous_actions!.push(action.direction);
   }
   G.actions = [];
+  G.num_places += 1;
 
   change_hands_or_enter_action_phase(G, ctx);
 };

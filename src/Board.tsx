@@ -324,7 +324,7 @@ export function Board(props: BGBoardProps<IGame>) {
   // useEffect(() => actions.log_msg(G.gamelog), [G.gamelog]);
 
   useEffect(() => {
-    if (G.phase == "place") {
+    if (G.phase == "place" && G.ai_players.length != 4) {
       actions.change_board("GoalBoard");
     }
   }, [G.phase]);
@@ -344,10 +344,21 @@ export function Board(props: BGBoardProps<IGame>) {
   // useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
 
   useEffect(() => {
-    if (props.G.round >= 8) {
+    if (props.G.round >= 8 || props.G.players.find(x => x.score >= 15) != undefined) {
       actions.change_board("FinalBoard");
     }
   }, [props.G.round]);
+
+  useEffect(()=>{
+    console.log("Num places:", props.G.num_places);
+    if (props.G.ai_players.length == 4 && props.G.phase == "place") {
+      console.log("Auto place cards");
+      setTimeout(() => {
+        combined.ai_moves();
+        console.log("Placed");
+      }, 1000);
+    }
+  }, [props.G.ai_players, props.G.num_places]);
 
   let board: (props:BoardProps) => JSX.Element = BOARDS[S.board] || GameBoard;
   // let board = GoalBoard;

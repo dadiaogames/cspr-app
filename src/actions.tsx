@@ -57,6 +57,15 @@ export function get_operations(G: IGame, S: IState): IOperation[] {
   }
   else {
     if (G.active_player_idx == S.player_idx) {
+      if (S.player_idx == G.host && G.ai_players.includes(G.active_player_idx)) {
+        return [
+          {
+            name: "行动",
+            action: "ai_act",
+            args: [S.player_idx],
+          }
+        ];
+      }
       if (G.next_action == "flip") {
         let flip_actions: IOperation[] = [
           {name: "翻开", action: "flip", args: [S.player_idx, "flip"]},

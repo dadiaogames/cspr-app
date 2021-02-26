@@ -49,7 +49,7 @@ function introduce_gameplay() {
 const Title = (props: {actions: any}) => {
   return <TitleScreen 
     title = "雀魂: 爆炸一姬"
-    titleImg = "https://s3.ax1x.com/2020/12/30/rqw8KA.png"
+    titleImg = "https://s3.ax1x.com/2021/02/02/ym9Sln.png"
     operations = {[
       {name: "单人练习", effect: () => props.actions.changer("SingleClient")},
       {name: "多人运动", effect: () => props.actions.changer("CSPRLobby")},

@@ -10,6 +10,11 @@ const ai_act: CombinedAction = (moves, actions, from_idx: number) => {
   moves.ai_act(from_idx);
 };
 
+const ai_moves: CombinedAction = (moves, actions, from_idx: number) => {
+  moves.ai_moves(from_idx);
+  moves.add_action();
+};
+
 const flip: CombinedAction = (moves, actions, player_idx: number, flip_action: FlipAction) => {
   moves.flip(player_idx, flip_action);
 }
@@ -29,5 +34,6 @@ export const COMBINED: Record<string, CombinedAction> = {
   ai_act,
   flip,
   execute,
+  ai_moves,
   // select_hand,
 };

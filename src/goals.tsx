@@ -132,7 +132,7 @@ export const goals_raw: ICard[] = [
   {
     name: "目标: 西红柿",
     // desc: <span>如果你拥有2/3/4个{FRUITS[0]}，则获得2/4/7分</span>,
-    desc: "如果你拥有2/3/4个西红柿，则获得2/4/7分",
+    desc: "如果你拥有2/3个西红柿，则获得2/4分",
     greedy_goal: 0,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 0);
@@ -141,7 +141,7 @@ export const goals_raw: ICard[] = [
 {
     name: "目标: 柠檬",
     // desc: <span>如果你拥有2/3/4个{FRUITS[1]}，则获得2/4/7分</span>,
-    desc: "如果你拥有2/3/4个柠檬，则获得2/4/7分",
+    desc: "如果你拥有2/3个柠檬，则获得2/4分",
     greedy_goal: 1,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 1);
@@ -150,16 +150,16 @@ export const goals_raw: ICard[] = [
 {
     name: "目标: 青苹果",
     // desc: <span>如果你拥有2/3/4个{FRUITS[2]}，则获得2/4/7分</span>,
-    desc: "如果你拥有2/3/4个苹果，则获得2/4/7分",
+    desc: "如果你拥有2/3个苹果，则获得2/4分",
     greedy_goal: 2,
     effect(G, ctx, player) {
       score_based_on_fruit(player, 2);
     }
   },
   {
-    name: "目标: 归档",
+    name: "目标: 存档",
     desc: "如果你的存档中有1/2张牌，则获得2/5分",
-    target_card: "归档",
+    target_card: "存档",
     effect(G, ctx, player) {
       let num_archives = player.hand.length;
       if (num_archives == 1) {
@@ -175,12 +175,12 @@ export const goals_raw: ICard[] = [
   },
   {
     name: "目标: 玩个刺激的",
-    desc: "如果你的弃牌堆中有\"引爆\"，则获得2分",
+    desc: "如果你的弃牌堆中有\"引爆\"，则获得3分",
     target_card: "引爆",
     effect(G, ctx, player) {
       let card = player.discard.find(x => x.name == "引爆");
       if (card != undefined) {
-        player.score += 2;
+        player.score += 3;
       }
     }
   },
@@ -194,17 +194,17 @@ export const goals_raw: ICard[] = [
   //     }
   //   }
   // },
-  {
-    name: "目标: 险中求胜",
-    desc: "如果你的弃牌堆中有\"炸弹\"，则获得2分",
-    target_card: "拆弹",
-    effect(G, ctx, player) {
-      let boom = player.discard.find(x => x.name == "炸弹");
-      if (boom != undefined) {
-        player.score += 2;
-      }
-    }
-  },
+  // {
+  //   name: "目标: 险中求胜",
+  //   desc: "如果你的弃牌堆中有\"炸弹\"，则获得2分",
+  //   target_card: "拆弹",
+  //   effect(G, ctx, player) {
+  //     let boom = player.discard.find(x => x.name == "炸弹");
+  //     if (boom != undefined) {
+  //       player.score += 2;
+  //     }
+  //   }
+  // },
   {
     name: "目标: 领导力",
     desc: "如果你的弃牌堆中有\"集体\"类牌，则获得2分",

@@ -54,7 +54,7 @@ export const CARDS: ICard[] = [
   {
     name: "送温暖",
     desc: "上家和下家各获得1分",
-    effect_type: "topdown",
+    effect_type: "greedy",
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/pot-of-food_1f372.png",
     effect(G, ctx, player) {
       let idx = G.players.indexOf(player);
@@ -133,8 +133,8 @@ export const CARDS: ICard[] = [
     }
   },
   {
-    name: "集体归档",
-    desc: "所有其他玩家归档1张牌",
+    name: "集体存档",
+    desc: "所有其他玩家存档1张牌",
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/night-with-stars_1f303.png",
     effect(G, ctx, player) {
       let other_players = G.players.filter(x => x != player && !x.out);
@@ -154,8 +154,8 @@ export const CARDS: ICard[] = [
     }
   },
 {
-    name: "归档",
-    desc: "归档1张牌",
+    name: "存档",
+    desc: "存档1张牌",
     has_fruit: true,
     effect_type: "protective",
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/whatsapp/273/floppy-disk_1f4be.png",
@@ -179,7 +179,7 @@ export const CARDS: ICard[] = [
   },
   {
     name: "拆弹",
-    desc: "查看牌堆顶的1张牌，如果是炸弹，将其弃掉，否则放回牌库顶",
+    desc: "查看牌堆顶的1张牌，如果是炸弹，将其弃掉并获得1分，否则放回牌库顶",
     has_fruit: true,
     effect_type: "protective",
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/google/263/wrench_1f527.png",
@@ -189,6 +189,7 @@ export const CARDS: ICard[] = [
         log_msg(G, ctx, <span>使用拆弹翻开 {card.name}</span>);
         if (card.name == "炸弹") {
           move(player.deck, player.discard);
+          player.score += 1;
         }
         else {
           return;
@@ -218,6 +219,7 @@ export const CARDS: ICard[] = [
   {
     name: "机会",
     desc: "将2张山牌放到牌库顶",
+    effect_type: "topdown",
     illust: "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/240/apple/271/game-die_1f3b2.png",
     effect(G, ctx, player) {
       player.deck = [...G.deck.slice(0,2), ...player.deck];
