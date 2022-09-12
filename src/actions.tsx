@@ -83,7 +83,7 @@ export function get_operations(G: IGame, S: IState): IOperation[] {
           {name: "执行", action: "execute", args: [S.player_idx, "execute"]},
         ];
         let top_card = player.discard[0];
-        if (top_card.fruit != undefined) {
+        if (top_card.fruit !== undefined || top_card.super_fruit !== undefined) {
           execute_actions.push({name: "作为水果", action: "execute", args: [S.player_idx, "fruit"]});
         }
         return execute_actions;

@@ -9,8 +9,8 @@ import { TitleScreen } from './Title';
 import { Lobby } from './Lobby';
 import { Dispatcher } from './types';
 
-const SERVER = SocketIO({server:"47.96.2.148:8000"});
-// const SERVER = SocketIO({server:"localhost:8000"});
+// const SERVER = SocketIO({server:"47.96.2.148:8000"});
+const SERVER = SocketIO({server:"localhost:8000"});
 // const SERVER = Local();
 
 interface IAppState {

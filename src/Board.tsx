@@ -89,10 +89,10 @@ function Central(props: {players: IPlayerInfo[]}) {
   </div>;
 }
 
-function InfoPanel(props: {log: string}) {
+function InfoPanel(props: {log: string, handleClick: () => void}) {
   // Top panel is only used to display count, all other logs are displayed in info panel
   // useEffect(()=>console.log(props.log), [props.log]);
-  return <div className="info-panel">
+  return <div className="info-panel" onClick={props.handleClick}>
     {props.log}
   </div>;
 }
@@ -223,7 +223,7 @@ function GameBoard(props: BoardProps){
     <Central 
       players = {reorder(props.G.players.map((player, idx) => process_player(player, idx, props.G, props.S)), [(props.S.player_idx+2)%4,(props.S.player_idx+3)%4,(props.S.player_idx+1)%4,props.S.player_idx])}
     />
-    <InfoPanel log={(props.G.phase == "place")? props.S.log : props.G.gamelogs[0]} />
+    <InfoPanel log={(props.G.phase == "place")? props.S.log : props.G.gamelogs[0]} handleClick={() => alert(props.G.gamelogs)} />
     {/* <InfoPanel log="这是一条log" /> */}
     {/* <InfoPanel log={props.S.log} /> */}
     {/* <InfoPanel log={props.G.gamelog} /> */}
@@ -236,7 +236,7 @@ function GameBoard(props: BoardProps){
       cards = {props.G.players[props.S.player_idx].hand.map(hand_processor(props.S))}  
       handleCardClick = {idx => () => props.actions.select_hand(idx, props.G.players[props.S.player_idx])}
     />
-    <TopPanel gameCount={`${"東南西"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} addAI={add_ai} />
+    <TopPanel gameCount={`${"東南西北"[Math.floor(props.G.round/4)]}${props.G.round % 4 + 1}局`} checkGoal={()=>props.actions.change_board("GoalBoard")} addAI={add_ai} />
   </div>;
 }
 
@@ -344,7 +344,7 @@ export function Board(props: BGBoardProps<IGame>) {
   // useEffect(() => {if (props.S && props.S.ai_players) props.moves.set_ai_players(props.S.ai_players)}, []);
 
   useEffect(() => {
-    if (props.G.round >= 8 || props.G.players.find(x => x.score >= 15) != undefined) {
+    if (props.G.round >= 12 || props.G.players.find(x => x.score >= 12) != undefined) {
       actions.change_board("FinalBoard");
     }
   }, [props.G.round]);

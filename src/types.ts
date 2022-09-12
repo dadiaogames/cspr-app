@@ -23,6 +23,9 @@ export interface IGame {
   gamelogs: string[],
   num_places: number,
   num_moves: number,
+  public_goal_bonus: number,
+
+  should_finished: boolean,
 
   f1: () => string,
   f2: () => string,
@@ -41,11 +44,12 @@ export interface ICard {
   stackable?: boolean,
   is_public?: boolean,
   is_achieved?: boolean,
+  super_fruit?: number,
 
   aggressive_goal?: number,
   protective_goal?: number,
   greedy_goal?: number,
-  target_card?: string,
+  target_cards?: string[],
 }
 
 export interface ICardWeight {
@@ -85,6 +89,11 @@ export interface IPlayer {
 
   ai_behaviour: IBehaviour,
   preset_ai_behaviour?: IBehaviour,
+
+  fruit_bonus: number,
+  goal_bonus: number,
+  survive_bonus: number,
+  has_tempura?: boolean,
 }
 
 export interface IAction {
@@ -97,7 +106,7 @@ export interface IAction {
 //   fruit: number,
 // }
 
-export type Entity = "skip" | "shield" | {fruit: number};
+export type Entity = "skip" | "shield" | "gift" | {fruit: number};
 
 // export interface ArchiveAction {
 //   archive_idx: number,

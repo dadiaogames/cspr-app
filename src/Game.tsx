@@ -30,7 +30,32 @@ export function move(deck1: ICard[], deck2: ICard[]) {
 
 function init_deck(G:IGame, ctx: Ctx): ICard[] {
   // let deck_data = "".split(" ")
-  let deck_data = [..._.times(6, () => "炸弹"), ..._.times(4, () => "护甲"), ..._.times(3, () => "白嫖"), ..._.times(2, ()=>"反向白嫖"), ..._.times(2, () => "拆弹"),..._.times(2, () => "引爆"),..._.times(3, () => "归档"),..._.times(2, () => "鞋子"),..._.times(1, () => "裸奔"),..._.times(2, () => "果汁"),..._.times(2, () => "送温暖"),..._.times(1, () => "西红柿"),..._.times(1, () => "柠檬"),..._.times(1, () => "苹果"),..._.times(1, ()=>"机会"), "集体拆弹", "集体归档", "果汁"];
+  let deck_data = [
+    ..._.times(4, () => "炸弹"), 
+    ..._.times(2, () => "护甲"), 
+    ..._.times(2, () => "引爆"), 
+
+    // ..._.times(1, () => "吉他"), 
+    // ..._.times(1, () => "上传"), 
+    // ..._.times(3, () => "天妇罗"), 
+    // ..._.times(2, () => "乌龟"), 
+    ..._.times(1, () => "拆弹"), 
+    ..._.times(2, () => "照相机"), 
+    ..._.times(2, () => "果汁"), 
+    ..._.times(2, () => "观星"),
+    ..._.times(2, () => "存档"),
+    ..._.times(1, () => "大存档"),
+
+    ..._.times(1, () => "送温暖"),
+    ..._.times(2, () => "集体存档"),
+    ..._.times(1, () => "美味佳肴"), 
+    ..._.times(1, () => "搋子"), 
+    ..._.times(1, () => "三屎"),
+
+    ..._.times(1, () => "西红柿"),
+    ..._.times(1, () => "柠檬"),
+    ..._.times(1, () => "苹果"),
+  ];
   let deck = deck_data.map(name => CARDS.find(x => x.name == name)).filter(x => x != undefined).map(x => ({...x})) as ICard[];
   for (let card of deck) {
     if (card.has_fruit) {
@@ -55,6 +80,9 @@ function setup_player(rng: PRNG): IPlayer {
 
     finished: false,
     out: false,
+    fruit_bonus: 0,
+    goal_bonus: 0,
+    survive_bonus: 0,
 
     // TODO: add goals
 
@@ -75,7 +103,7 @@ function setup_player(rng: PRNG): IPlayer {
 const init_draft: Move = (G, ctx) => {
   // After all cards are into the deck and deck is shuffled
   for (let player of G.players) {
-    let num_cards = 7;
+    let num_cards = 6; // PARAM
     player.hand = G.deck.slice(0, num_cards);
     G.deck = G.deck.slice(num_cards);
 
@@ -108,18 +136,28 @@ const init_goals: Move = (G, ctx) => {
     player.goals = goals.slice(i, i+1);
   }
 
-  G.public_goals = G.rng.shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,2);
+  let num_public_goals = 1; // PARAM
+  G.public_goals = G.rng.shuffle(PUBLIC_GOALS.map(g=>({...g, is_achieved: false}))).slice(0,num_public_goals);
 }
 
 const init_round: Move = (G, ctx) => {
   // Reset values
   G.num_places = 0;
 
+  // Check players' scores
+  for (let p of G.players) {
+    if (p.score >= 12) {
+      G.should_finished = true;
+      console.log("Game Finished: ", G.players.map(p => p.score));
+    }
+  }
+
   // Reset the deck, pass the init player
   G.phase = "place";
   G.round += 1;
   G.deck = init_deck(G, ctx);
   G.init_player = (G.init_player + 1) % 4;
+  G.public_goal_bonus = 0;
 
   // Reset player data
   for (let player of G.players) {
@@ -130,6 +168,10 @@ const init_round: Move = (G, ctx) => {
     player.out = false;
     player.finished = false;
     player.previous_action = -1;
+    player.fruit_bonus = 0;
+    player.goal_bonus = 0;
+    player.survive_bonus = 0;
+    player.has_tempura = false;
   }
 
   init_goals(G, ctx);
@@ -157,6 +199,9 @@ function setup(ctx: Ctx): IGame {
     gamelogs: [],
     num_places: 0,
     num_moves: 0,
+    public_goal_bonus: 0,
+
+    should_finished: false,
 
     f1: () => "f1",
     f2: () => "f2",
@@ -183,66 +228,62 @@ export const set_ai_players: Move = (G, ctx, num_ai) => {
 
 export const init_ai_behaviour: Move = (G, ctx) => {
   const BEHAVIOURS: IBehaviour[] = [
-    // Average greedy
+    // Average
+    // {
+    //   aggressive: 5,
+    //   protective: 5,
+    //   topdown: 5,
+    //   greedy: 5,
+    //   protective_growth: 2,
+    //   topdown_growth: 2,
+    //   greedy_growth: 2,
+    // },
+
+    // Average Greedy: Swiss #1 306
+    // {
+    //   aggressive: 5,
+    //   protective: 5,
+    //   topdown: 0,
+    //   greedy: 9,
+    //   protective_growth: 2,
+    //   topdown_growth: 3,
+    //   greedy_growth: 2,
+    // },
+
+    // Greedy Protective: Swiss #1 306_4
     {
-      aggressive: 5,
-      protective: 5,
-      topdown: 0,
-      greedy: 7,
-      protective_growth: 0,
-      topdown_growth: 1,
-      greedy_growth: 4,
-    },
-    // Protective growth
-    {
-      aggressive: 1,
-      protective: 4,
-      topdown: 3,
-      greedy: 5,
-      protective_growth: 6,
-      topdown_growth: 1,
-      greedy_growth: 1,
-    },
-    // Aggressive growing greedy
-    {
-      aggressive: 10,
-      protective: 10,
-      topdown: 2,
-      greedy: 7,
-      protective_growth: 0,
-      topdown_growth: 4,
-      greedy_growth: 6,
-    },
-    // Really greedy
-    {
-      aggressive: 1,
-      protective: 3,
-      topdown: 0,
-      greedy: 7,
-      protective_growth: 1,
+      aggressive: 0,
+      protective: 6,
+      topdown: 5,
+      greedy: 8,
+      protective_growth: 4,
       topdown_growth: 0,
-      greedy_growth: 4,
+      greedy_growth: 0,
     },
-// Average with average growth
+
+    // Another Growth: Random #1 306_2
     {
-      aggressive: 7,
+      aggressive: 2,
+      protective: 5,
+      topdown: 2,
+      greedy: 9,
+      protective_growth: 0,
+      topdown_growth: 5,
+      greedy_growth: 5,
+    },
+
+    // No Growth: Swiss #1 306_7
+    {
+      aggressive: 6,
       protective: 7,
       topdown: 1,
-      greedy: 10,
-      protective_growth: 5,
-      topdown_growth: 3,
-      greedy_growth: 4,
-    },
-// Topdown
-    {
-      aggressive: 7,
-      protective: 9,
-      topdown: 4,
-      greedy: 10,
+      greedy: 9,
       protective_growth: 0,
-      topdown_growth: 6,
-      greedy_growth: 3,
+      topdown_growth: 0,
+      greedy_growth: 0,
     },
+    
+    
   ];
   for (let i=0; i<4; i++) {
     G.players[i].preset_ai_behaviour = G.rng.choice(BEHAVIOURS);
@@ -259,6 +300,7 @@ export function add_fruits(G:IGame, ctx:Ctx, player: IPlayer, fruits: number[]) 
   for (let i=0; i<3; i++) {
     for (let j=0; j<fruits[i]; j++) {
       player.entities.push({fruit: i});
+      player.score += player.fruit_bonus;
     }
   }
   for (let goal of G.public_goals) {
@@ -302,6 +344,8 @@ const ai_moves: Move = (G, ctx) => {
     // AI IMPLEMENT: card_idx and direction
     // let card_idx = G.rng.randRange(G.players[idx].hand.length);
     // let direction = G.rng.randRange(G.players.length);
+
+    // Init cards
     let ai = G.players[idx];
     let card_weights: ICardWeight[] = [];
     for (let i=0; i<ai.hand.length; i++) {
@@ -319,64 +363,97 @@ const ai_moves: Move = (G, ctx) => {
       top = sorted_by_score[1];
     }
 
-    if (G.round >= 4) {
+    if (G.round >= 3) {
+      // After round 3, goes top down if it is on the top, and go growing if it is on the bottom
       if (sorted_by_score.slice(0,2).includes(ai)) {
-        ai.ai_behaviour.topdown += ai.ai_behaviour.topdown_growth;
-        ai.ai_behaviour.protective += ai.ai_behaviour.protective_growth;
+        ai.ai_behaviour.topdown = (ai.preset_ai_behaviour || {topdown: 0}).topdown +  ai.ai_behaviour.topdown_growth;
       }
       else {
-        ai.ai_behaviour.greedy += ai.ai_behaviour.greedy_growth;
+        ai.ai_behaviour.greedy = (ai.preset_ai_behaviour || {greedy: 0}).greedy + (ai.ai_behaviour.greedy_growth);
       }
     }
+
     let danger = 0;
     for (let p of G.players) {
       if (p.previous_action && ((G.players.indexOf(p)+p.previous_action) % 4 == idx)) {
         danger += 1;
       }
     }
-    if (danger == 0) {
-      ai.ai_behaviour.greedy += ai.ai_behaviour.greedy_growth;
-    }
-    else {
-      // ai.ai_behaviour.greedy -= ai.ai_behaviour.protective_growth;
-      // ai.ai_behaviour.greedy = G.rng.randRange(10);
-      ai.ai_behaviour.greedy = ai.preset_ai_behaviour?.greedy || 0;
-      ai.ai_behaviour.protective_growth += ai.ai_behaviour.protective_growth;
+    if (danger !== 0) {
+      ai.ai_behaviour.greedy -= ai.ai_behaviour.protective_growth;
+      ai.ai_behaviour.protective += ai.ai_behaviour.protective_growth;
     }
 
-    // Aggressive goals
+    // Goals
     for (let goal of ai.goals) {
+
+      // Aggressive Goal
       if (goal.aggressive_goal) {
         for (let i=0; i<ai.hand.length; i++) {
           let card = ai.hand[i];
           let weight = card_weights[i];
-          if (card.effect_type == "aggressive") {
-            weight.weight += ai.ai_behaviour.aggressive + 10;
+          if (card.effect_type === "aggressive") {
+            weight.weight += ai.ai_behaviour.aggressive + ai.ai_behaviour.greedy;
             weight.direction.push(goal.aggressive_goal);
+            if (goal.protective_goal !== undefined) {
+              weight.direction.push(goal.protective_goal);
+            }
           }
         }
       }
-      if (goal.greedy_goal) {
+
+      // Greedy Goal
+      if (goal.greedy_goal !== undefined) {
         for (let i=0; i<ai.hand.length; i++) {
           let card = ai.hand[i];
           let weight = card_weights[i];
-          if (card.fruit == goal.greedy_goal) {
+          if (card.fruit === goal.greedy_goal || card.super_fruit === goal.greedy_goal) {
             weight.weight += ai.ai_behaviour.greedy;
+            if (card.super_fruit === goal.greedy_goal) { weight.weight += ai.ai_behaviour.greedy * 2; }
             weight.direction.push(0);
           }
         }
       }
-      if (goal.target_card) {
-        for (let i=0; i<ai.hand.length; i++) {
-          let card = ai.hand[i];
-          let weight = card_weights[i];
-          if (card.name == goal.target_card) {
-            weight.weight += ai.ai_behaviour.greedy;
-            weight.direction.push(0);
+
+      // Target Card Goal
+      if (goal.target_cards) {
+        let contain_target_cards = false;
+        for (let deck_card of ai.deck) {
+          if (goal.target_cards.includes(deck_card.name)) {
+            contain_target_cards = true;
           }
+        }
+        if (contain_target_cards === false) {
+          for (let i=0; i<ai.hand.length; i++) {
+            let card = ai.hand[i];
+            let weight = card_weights[i];
+            if (goal.target_cards.includes(card.name)) {
+              weight.weight += ai.ai_behaviour.greedy * 2;
+              weight.direction.push(0);
+            }
+          }
+        }
+      }
+
+      // Public Goal
+      let public_fruit = G.public_goals[0].greedy_goal;
+      for (let i=0; i<ai.hand.length; i++) {
+        let card = ai.hand[i];
+        let weight = card_weights[i];
+        if (card.fruit === public_fruit || card.super_fruit === public_fruit) {
+          weight.weight += ai.ai_behaviour.greedy;
+          if (card.super_fruit === public_fruit) { 
+            weight.weight += ai.ai_behaviour.greedy * 3;
+          }
+          weight.direction.push(0);
+        }
+        if ((card.super_fruit != undefined) && (public_fruit == -1)) {
+          weight.weight += ai.ai_behaviour.greedy * 2;
+          weight.direction.push(0);
         }
       }
     }
+
     // Greedy
     for (let i=0; i<ai.hand.length; i++) {
       let card = ai.hand[i];
@@ -391,15 +468,22 @@ const ai_moves: Move = (G, ctx) => {
         }
       }
     }
+
     // Protective
     for (let i=0; i<ai.hand.length; i++) {
       let card = ai.hand[i];
       let weight = card_weights[i];
       if (card.effect_type == "protective") {
         weight.weight += ai.ai_behaviour.protective;
-        weight.direction.push(0);
+        if (card.name == "集体存档") {
+          weight.direction.push(G.rng.choice([1,2,3]));
+        }
+        else {
+          weight.direction.push(0);
+        }
       }
     }
+
     // Topdown
     for (let i=0; i<ai.hand.length; i++) {
       let card = ai.hand[i];
@@ -409,6 +493,7 @@ const ai_moves: Move = (G, ctx) => {
         weight.direction.push((4 + G.players.indexOf(top) - idx)%4);
       }
     }
+
     // Disturb
     let to_disturb = [0,0,0,0];
     to_disturb[idx] = -99;
@@ -425,29 +510,38 @@ const ai_moves: Move = (G, ctx) => {
         }
       }
     }
-    let disturb_direction = (4 + ((to_disturb.indexOf(0) + 4) % 4) - idx) % 4;
-    for (let i=0; i<ai.hand.length; i++) {
-      let card = ai.hand[i];
-      let weight = card_weights[i];
-      if (card.effect_type == "topdown" || card.effect_type == "aggressive") {
-        weight.weight += ai.ai_behaviour.aggressive * ((7-ai.hand.length)/7);
-        weight.direction.push(disturb_direction);
+    if (to_disturb.indexOf(0) != -1) {
+      let disturb_direction = (4 + ((to_disturb.indexOf(0) + 4) % 4) - idx) % 4;
+      for (let i=0; i<ai.hand.length; i++) {
+        let card = ai.hand[i];
+        let weight = card_weights[i];
+        if (card.effect_type == "topdown" || card.effect_type == "aggressive") {
+          weight.weight += ai.ai_behaviour.aggressive * ((7-ai.hand.length)/7);
+          weight.direction.push(disturb_direction);
+        }
       }
     }
 
-
+    // Sort the weights and get the right card
     let sorted_weights = [...card_weights];
     sorted_weights.sort((a,b)=>b.weight - a.weight);
-    let card_idx = card_weights.indexOf(sorted_weights[0]);
+    let card_idx = card_weights.indexOf(sorted_weights[0]); // EH: modularize this
     let direction = 0;
     if (sorted_weights[0].direction.length > 0) {
       direction = G.rng.choice(sorted_weights[0].direction);
     }
 
     // console.log("Weights:", card_weights);
-    if (direction == 0 && (ai.hand[card_idx].effect_type == "aggressive" || ai.hand[card_idx].effect_type == "topdown")) {
-      console.log("AI is doing something fool");
-    }
+    // if (direction == 0 && (ai.hand[card_idx].effect_type == "aggressive" || ai.hand[card_idx].effect_type == "topdown") && (ai.hand[card_idx].name != "引爆")) {
+      // console.log("AI is doing something fool");
+    // }
+
+    // Test the weights
+    // console.log("AI's behavior: ", {...ai.ai_behaviour});
+    // console.log("Public goal: ", G.public_goals[0].greedy_goal);
+    // console.log("Player goal: ", ai.goals[0].name);
+    // console.log("Card weights: ", card_weights.map((w, i) => `${ai.hand[i].name} ${w.weight} |`)); 
+    // console.log("---");
 
     G.actions.push({
       from_idx: idx,
@@ -483,12 +577,12 @@ const change_hands_or_enter_action_phase: Move = (G, ctx) => {
   // console.log("F2:", G.f2);
 
   if (num_remained_cards == 0) {
-    console.log("Time to enter the action phase");
+    // console.log("Time to enter the action phase");
     enter_action_phase(G, ctx);
   }
 
   else {
-    console.log("Pass hands");
+    // console.log("Pass hands");
     hands = [hands[len-1], ...hands.slice(0, len-1)];
     for (let i=0; i<len; i++) {
       G.players[i].hand = hands[i];
@@ -541,14 +635,15 @@ export function flip_card(active_player: IPlayer) {
 
 export function out(player: IPlayer) {
   let shield_idx = player.entities.map((x,idx) => (x == "shield")? idx : undefined).filter(x => x != undefined)[0];
-  console.log("Find shield:", shield_idx);
+  // console.log("Find shield:", shield_idx);
   if (shield_idx != undefined) {
     player.entities = player.entities.filter((x,idx) => (idx != shield_idx));
   }
   else {
-    console.log(`Player ${player.score}分 is out`)
+    // console.log(`Player ${player.score}分 is out`)
     player.out = true;
     player.finished = true;
+    // player.score -= player.survive_bonus;
   }
 }
 
@@ -634,8 +729,10 @@ const flip: Move = (G, ctx, player_idx: number, flip_action: FlipAction) => {
     // Normal flip goes here
     else {
       flip_card(active_player);
-      console.log("翻开牌", active_player.discard[0].name);
-      log_msg(G, ctx, `翻开 ${active_player.discard[0].name}`);
+      // console.log("翻开牌", active_player.discard[0].name);
+      if (active_player.discard[0] !== undefined) {
+        log_msg(G, ctx, `翻开 ${active_player.discard[0].name}`);
+      }
     }
 
     proceed(G, ctx, skipped);
@@ -650,13 +747,18 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
   if (player_idx == G.active_player_idx) {
     let player = G.players[G.active_player_idx];
     let card = player.discard[0];
-    console.log(`${player_idx} is executing`);
+    // console.log(`${player_idx} is executing`);
     if (execute_action == "fruit") {
-      console.log("Gonna add fruit");
-      if (card.fruit != undefined) {
+      // console.log("Gonna add fruit");
+      if (card.fruit !== undefined || card.super_fruit !== undefined) {
         // player.entities.push({fruit: card.fruit});
         let added = [0,0,0];
-        added[card.fruit] = 1;
+        if (card.fruit !== undefined) {
+          added[card.fruit] = 1;
+        }
+        if (card.super_fruit !== undefined) {
+          added[card.super_fruit] = 2;
+        }
         add_fruits(G, ctx, player, added);
         log_msg(G, ctx, `将 ${card.name} 作为水果`);
       }
@@ -665,17 +767,26 @@ const execute: Move = (G, ctx, player_idx: number, execute_action: ExecuteAction
       }
     }
     else {
-      console.log(`Just execute ${card.name}`);
+      // console.log(`Just execute ${card.name}`);
       // Add functions
       card = (card.is_goal?GOALS:CARDS).find(x => x.name == card.name) as ICard;
       // console.log({...card});
       card.effect && card.effect(G, ctx, player, card);
       log_msg(G, ctx, `执行 ${card.name}`);
+      if (card.name == "观星") {
+        log_msg(G, ctx, `观察到 ${player.deck.slice(0,2).map(c => c.name)}`);
+      }
     }
 
     // Check finished
     // EH: move all "finished" into a getter function, just check whether is out or deck length is 0, this is the best way to "finish"
     player.finished = (player.out || (player.deck.length == 0));
+
+    // HACK: using procedure method
+    if (player.deck.length === 0) {
+      player.score += player.survive_bonus;
+      player.survive_bonus = 0;
+    }
 
     proceed(G, ctx);
   }
@@ -689,12 +800,13 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
     let ai = G.players[G.active_player_idx];
     if (G.next_action == "flip") {
       // AI IMPLEMENT: Flip action and execute action
+      // ENH: modularize this part
       let flip_action: FlipAction = "flip";
 
       // Play archive
       if (ai.hand.length > 0) {
         let archive = ai.hand[0];
-        if (archive.effect_type != "aggressive" && archive.effect_type != "topdown" && ai.goals[0].target_card != "归档") {
+        if (archive.effect_type != "aggressive" && archive.effect_type != "topdown" && (!(ai.goals[0].target_cards || []).includes("存档"))) {
           flip_action = {archive_idx: 0};
         }
       }
@@ -703,23 +815,37 @@ const ai_act: Move = (G, ctx, from_idx: number) => {
       if ((ai.entities.includes("skip")) && 
       (ai.deck.length > 1) && 
       (ai.deck.length < 5) && 
-      (ai.goals[0].target_card != "鞋子") &&
+      (ai.goals[0].target_cards != ["鞋子"]) &&
       (ai.ai_behaviour.protective > ai.ai_behaviour.greedy) && 
       (!ai.entities.includes("shield"))) {
-        console.log(`It's skip time! ${ai.deck.length} ${ai.entities}`);
+        // console.log(`It's skip time! Deck len: ${ai.deck.length}`);
         flip_action = "skip";
       }
 
       flip(G, ctx, G.active_player_idx, flip_action);
     }
+
     else if (G.next_action == "execute") {
+      // Execute action
+
       let execute_action: ExecuteAction = "execute";
       // console.log(`AI Act: Greedy ${ai.ai_behaviour.greedy} Protective ${ai.ai_behaviour.protective}`)
-      if (ai.ai_behaviour.greedy > ai.ai_behaviour.protective && 
-        [...G.public_goals.filter(g => !g.is_achieved).map(g => g.greedy_goal), ai.goals[0].greedy_goal].filter(g => g != undefined).includes(ai.discard[0].fruit)) {
-        console.log(`It's fruit time! ${[...G.public_goals.map(g => g.greedy_goal), ai.goals[0].greedy_goal]} ${ai.discard[0].fruit}`);
-        execute_action = "fruit"
+
+      if ((ai.ai_behaviour.greedy > ai.ai_behaviour.protective) 
+      && [...G.public_goals.filter(g => !g.is_achieved).map(g => g.greedy_goal), ai.goals[0].greedy_goal].filter(g => g != undefined).includes(ai.discard[0].fruit)) {
+        // console.log(`It's fruit time! Greedy Goal:${[...G.public_goals.map(g => g.greedy_goal), ai.goals[0].greedy_goal]} Fruit: ${ai.discard[0].fruit}`);
+        execute_action = "fruit";
       }
+
+      if (ai.discard[0].name == "果汁" && ai.entities.filter(x => typeof x == "object").length == 0) {
+        // console.log("It is a juice but AI does not have fruits.");
+        execute_action = "fruit";
+      }
+
+      if (ai.discard[0].super_fruit !== undefined) {
+        execute_action = "fruit";
+      }
+
       execute(G, ctx, G.active_player_idx, execute_action);
     }
     else {
